@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>World Development – Exercise 2</title>
+  <link rel="stylesheet" type="text/css" href="{{url_for('static',filename='styles/style.css')}}">
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.0/topojson.min.js"></script>
+</head>
+<body>
+
+<header>
+  <h1>Exercise 2</h1>
+  <p class="subtitle">Group 39</p>
+</header>
+
+<main>
+  <!-- ── PCA scatterplot ── -->
+  <div class="row">
+
+    <section class="panel" id="pca-panel">
+      <h2>PCA Scatterplot
+        <span class="year-badge" id="pca-year-label"></span>
+      </h2>
+      <p class="hint">Hover or click a dot to highlight the country.</p>
+      <div id="pca-container"></div>
+      <div id="pca-legend"></div>
+    </section>
+
+  </div>
+
+</main>
+
+<!-- ── Tooltip ── -->
+<div id="tooltip" class="tooltip hidden"></div>
+
+<!-- ── Inject server data via Jinja2 ── -->
+<script id="server-data" type="application/json">
+  {{ {
+    "countries": countries,
+    "pca_data": pca_data,
+    "timeseries": timeseries,
+    "features": features
+  } | tojson }}
+</script>
+
+<!-- ── Application modules ── -->
+<script src="{{ url_for('static', filename='js/state.js') }}"></script>
+<script src="{{ url_for('static', filename='js/pca.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+</body>
+</html>
