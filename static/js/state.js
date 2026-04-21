@@ -1,10 +1,10 @@
 /**
  * state.js — Shared application state for coordinated views.
- * Any view that wants to react to selection changes subscribes
- * via State.on('change', callback).
+ * Subscribe via State.on('change', cb) or State.on('hover', cb).
  */
 const State = (() => {
-  let _selected = null;          // currently selected country (string | null)
+  let _selected = null;
+  let _hovered  = null;
   const _listeners = [];
 
   function on(event, fn) {
@@ -22,7 +22,13 @@ const State = (() => {
     emit('change', { selected: _selected });
   }
 
-  function getSelected() { return _selected; }
+  function hover(country) {
+    _hovered = country ?? null;
+    emit('hover', { hovered: _hovered });
+  }
 
-  return { on, select, getSelected };
+  function getSelected() { return _selected; }
+  function getHovered()  { return _hovered; }
+
+  return { on, select, hover, getSelected, getHovered };
 })();

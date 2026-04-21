@@ -63,7 +63,9 @@ def index():
     pca_data = compute_pca(df) # task 2 compute PCA
 
     # prepare time-series data for all countries and years
-    feature_cols = [c for c in df.columns if c not in ['Country Name', 'year']]
+    # exclude non-numeric identifier columns so the indicator dropdown only
+    # offers plottable features (Country Code is a string like "ALB").
+    feature_cols = [c for c in df.columns if c not in ['Country Name', 'Country Code', 'year']]
     timeseries = {}
     for country in COUNTRIES:
         cdf = df[df['Country Name'] == country].sort_values('year')
@@ -92,5 +94,9 @@ def api_pca():
     return jsonify(compute_pca(df))
 
 
-if __name__ == '__main__':
+def main():
     app.run(debug=True, port=5000)
+
+
+if __name__ == '__main__':
+    main()

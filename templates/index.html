@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,35 +10,63 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.0/topojson.min.js"></script>
 </head>
+
 <body>
 
-<header>
-  <h1>Exercise 2</h1>
-  <p class="subtitle">Group 39</p>
-</header>
+  <header>
+    <h1>Exercise 2</h1>
+    <p class="subtitle">Group 39</p>
+  </header>
 
-<main>
-  <!-- ── PCA scatterplot ── -->
-  <div class="row">
+  <main>
+    <!--  PCA scatterplot  -->
+    <div class="row">
 
-    <section class="panel" id="pca-panel">
-      <h2>PCA Scatterplot
-        <span class="year-badge" id="pca-year-label"></span>
-      </h2>
-      <p class="hint">Hover or click a dot to highlight the country.</p>
-      <div id="pca-container"></div>
-      <div id="pca-legend"></div>
-    </section>
+      <section class="panel" id="pca-panel">
+        <h2>PCA Scatterplot
+          <span class="year-badge" id="pca-year-label"></span>
+        </h2>
+        <p class="hint">Hover or click a dot to highlight the country.</p>
+        <div id="pca-container"></div>
+        <div id="pca-legend"></div>
+      </section>
 
-  </div>
+    </div>
 
-</main>
+    <!--  Choropleth map  -->
+    <div class="row">
 
-<!-- ── Tooltip ── -->
-<div id="tooltip" class="tooltip hidden"></div>
+      <section class="panel" id="map-panel">
+        <h2>Choropleth Map</h2>
+        <div class="map-controls">
+          <label for="indicator-select">Indicator:</label>
+          <select id="indicator-select"></select>
+          <button type="button" id="map-reset-zoom" title="Reset zoom">Reset zoom</button>
+          <span class="hint">Scroll to zoom, drag to pan.</span>
+        </div>
+        <p class="hint">Project countries coloured by most-recent-year value. Click to plot time series.</p>
+        <div id="map-container"></div>
+      </section>
 
-<!-- ── Inject server data via Jinja2 ── -->
-<script id="server-data" type="application/json">
+    </div>
+
+    <!--  Time series  -->
+    <div class="row">
+
+      <section class="panel" id="ts-panel">
+        <h2>Time Series <span id="ts-country"></span></h2>
+        <div id="ts-container"></div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!--  Tooltip  -->
+  <div id="tooltip" class="tooltip hidden"></div>
+
+  <!--  Inject server data via Jinja2  -->
+  <script id="server-data" type="application/json">
   {{ {
     "countries": countries,
     "pca_data": pca_data,
@@ -46,10 +75,13 @@
   } | tojson }}
 </script>
 
-<!-- ── Application modules ── -->
-<script src="{{ url_for('static', filename='js/state.js') }}"></script>
-<script src="{{ url_for('static', filename='js/pca.js') }}"></script>
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <!--  Application modules  -->
+  <script src="{{ url_for('static', filename='js/state.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/pca.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/timeseries.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
 </body>
+
 </html>

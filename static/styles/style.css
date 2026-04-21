@@ -148,3 +148,121 @@ text.title {
 .pca-label {
   pointer-events: none;
 }
+
+/* ── PCA legend ── */
+#pca-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem .8rem;
+  margin-top: .6rem;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: 0.72rem;
+}
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Layout ── */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Choropleth map ── */
+.country {
+  stroke: #fff;
+  stroke-width: 0.5;
+}
+.country.project {
+  cursor: pointer;
+}
+
+/* Keep strokes at a constant pixel width while the zoom layer is transformed. */
+.country,
+.map-hover,
+.map-selected {
+  vector-effect: non-scaling-stroke;
+}
+
+/* Highlight overlay — drawn above all country fills so the full border is
+   visible regardless of neighbour paint order. */
+.map-hover,
+.map-selected {
+  fill: none;
+  pointer-events: none;
+  stroke-linejoin: round;
+}
+.map-hover {
+  stroke: #333;
+  stroke-width: 1.2;
+}
+.map-selected {
+  stroke: var(--highlight);
+  stroke-width: 1.8;
+}
+
+/* Let the SVG hint the browser that drag/scroll goes to the d3 zoom handler. */
+#map-container svg {
+  touch-action: none;
+  cursor: grab;
+}
+#map-container svg:active {
+  cursor: grabbing;
+}
+
+#map-reset-zoom {
+  font-size: 0.78rem;
+  padding: .2rem .55rem;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fafafa;
+  cursor: pointer;
+}
+#map-reset-zoom:hover {
+  background: #eee;
+}
+
+/* ── PCA hover highlight ── */
+.pca-dot.hovered {
+  r: 6px;
+  stroke: #000;
+  stroke-width: 1.5;
+}
+
+/* ── Time-series chart ── */
+.ts-line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5;
+}
+.ts-hint {
+  fill: #aaa;
+  font-size: 8px;
+  font-style: italic;
+}
+
+.map-controls {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: .5rem;
+}
+
+#indicator-select {
+  font-size: 0.82rem;
+  padding: .2rem .4rem;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  cursor: pointer;
+  max-width: 320px;
+}

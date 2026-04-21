@@ -174,13 +174,17 @@ const PCAChart = (() => {
            PC2: ${d.y.toFixed(3)}<br>
            Region: ${REGION_MAP[d.country] ?? '—'}`
         );
+        State.hover(d.country);
       })
       .on('mousemove', (event) => {
         tooltip
           .style('left', (event.clientX + 14) + 'px')
           .style('top',  (event.clientY - 10) + 'px');
       })
-      .on('mouseout', hideTip)
+      .on('mouseout', (event, d) => {
+        hideTip();
+        State.hover(null);
+      })
       .on('click', (event, d) => {
         State.select(d.country);
       });
@@ -193,6 +197,10 @@ const PCAChart = (() => {
       labels
         .classed('visible', d => d.country === selected)
         .attr('opacity', d => (!selected || d.country === selected) ? 1 : 0);
+    });
+
+    State.on('hover', ({ hovered }) => {
+      dots.classed('hovered', d => d.country === hovered);
     });
 
     // ── Legend ───────────────────────────────────────────────────────────
