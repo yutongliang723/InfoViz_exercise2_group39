@@ -19,6 +19,17 @@
   </header>
 
   <main>
+    <!--  Global controls  -->
+    <div class="controls">
+      <label for="year-slider">Year:</label>
+      <input type="range" id="year-slider"
+             min="{{ year_range.min }}"
+             max="{{ year_range.max }}"
+             step="1"
+             value="{{ year_range.initial }}" />
+      <span id="year-label">{{ year_range.initial }}</span>
+    </div>
+
     <!--  PCA scatterplot  -->
     <div class="row">
 
@@ -41,11 +52,16 @@
         <div class="map-controls">
           <label for="indicator-select">Indicator:</label>
           <select id="indicator-select"></select>
-          <button type="button" id="map-reset-zoom" title="Reset zoom">Reset zoom</button>
           <span class="hint">Scroll to zoom, drag to pan.</span>
         </div>
         <p class="hint">Project countries coloured by most-recent-year value. Click to plot time series.</p>
-        <div id="map-container"></div>
+        <div id="map-container">
+          <button type="button" id="map-reset-zoom" title="Reset view" aria-label="Reset view">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path fill="currentColor" d="M12 3 4 10v11h5v-6h6v6h5V10z"/>
+            </svg>
+          </button>
+        </div>
       </section>
 
     </div>
@@ -71,7 +87,9 @@
     "countries": countries,
     "pca_data": pca_data,
     "timeseries": timeseries,
-    "features": features
+    "features": features,
+    "country_ids": country_ids,
+    "country_regions": country_regions
   } | tojson }}
 </script>
 

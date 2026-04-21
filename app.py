@@ -57,6 +57,21 @@ def compute_pca(df): # task 2: compute pca on the most recent year's data
     return result
 
 
+def build_country_ids(df):
+    # Combine CSV alpha-3 codes with the ISO-3166 numeric lookup to produce
+    # {country_name: "padded-3-digit-numeric"} — keyed exactly the way
+    # world-atlas topojson features are keyed (e.g. Albania → "008").
+    with open('static/data/iso_numeric.json') as f:
+        iso_alpha3_to_numeric = json.load(f)
+    name_to_code = df[['Country Name', 'Country Code']].drop_duplicates().set_index('Country Name')['Country Code'].to_dict()
+    return {name: iso_alpha3_to_numeric[code] for name, code in name_to_code.items() if code in iso_alpha3_to_numeric}
+
+
+def load_regions():
+    with open('static/data/regions.json') as f:
+        return json.load(f)
+
+
 @app.route('/')
 def index():
     df = load_and_filter_data() # task 1: load and filter data
@@ -74,12 +89,24 @@ def index():
                                 **{col: cdf[col].round(2).tolist() for col in feature_cols if col in cdf.columns}
                             }
 
+    country_ids     = build_country_ids(df)
+    country_regions = load_regions()
+
+    year_range = {
+        'min':     int(df['year'].min()),
+        'max':     int(df['year'].max()),
+        'initial': int(df['year'].max()),
+    }
+
     return render_template(
                             'index.html',
-                            countries=COUNTRIES,   
-                            pca_data=pca_data, 
-                            timeseries=timeseries, 
+                            countries=COUNTRIES,
+                            pca_data=pca_data,
+                            timeseries=timeseries,
                             features=feature_cols,
+                            country_ids=country_ids,
+                            country_regions=country_regions,
+                            year_range=year_range,
                         )
 
 @app.route('/api/data')
