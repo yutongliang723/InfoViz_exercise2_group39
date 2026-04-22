@@ -232,5 +232,5 @@ const TimeSeriesChart = (() => {
     State.on('year',      update);
   }
 
-  return { render, update };
+  return { render };
 })();

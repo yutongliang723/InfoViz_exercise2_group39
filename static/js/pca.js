@@ -30,12 +30,11 @@ const PCAChart = (() => {
 
   function render(pcaData, timeseries, countryRegions) {
     const { countries, pca_coords, explained_variance, year: pcaYear } = pcaData;
-    const year = pcaYear;
 
     _regionMap = countryRegions || {};
     colorScale.domain([...new Set(Object.values(_regionMap))]);
 
-    d3.select('#pca-year-label').text(`PCA year: ${year}`);
+    d3.select('#pca-year-label').text(`PCA year: ${pcaYear}`);
 
     const { feature_names } = pcaData;
     const featBox = d3.select('#pca-panel').insert('div', '#pca-container')

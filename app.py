@@ -13,8 +13,9 @@ def load_regions():
         return json.load(f)
 
 
-# Country set is derived from regions.json so it lives in one place.
-COUNTRIES = list(load_regions().keys())
+# Load once at startup; used for both COUNTRIES and the per-request region map.
+_REGIONS = load_regions()
+COUNTRIES = list(_REGIONS.keys())
 
 
 def load_and_filter_data():
@@ -43,7 +44,6 @@ def compute_pca(df):
         'pca_coords': X_pca.tolist(),
         'explained_variance': pca.explained_variance_ratio_.tolist(),
         'feature_names': feature_cols,
-        'loadings': pca.components_.tolist(),
     }
 
 
@@ -66,12 +66,11 @@ def index():
     for country in COUNTRIES:
         cdf = df[df['Country Name'] == country].sort_values('year')
         timeseries[country] = {
-                                'years': cdf['year'].tolist(),
-                                **{col: cdf[col].round(2).tolist() for col in feature_cols if col in cdf.columns}
-                            }
+            'years': cdf['year'].tolist(),
+            **{col: cdf[col].round(2).tolist() for col in feature_cols if col in cdf.columns}
+        }
 
-    country_ids     = build_country_ids(df)
-    country_regions = load_regions()
+    country_ids = build_country_ids(df)
 
     year_range = {
         'min':     int(df['year'].min()),
@@ -80,15 +79,16 @@ def index():
     }
 
     return render_template(
-                            'index.html',
-                            countries=COUNTRIES,
-                            pca_data=pca_data,
-                            timeseries=timeseries,
-                            features=feature_cols,
-                            country_ids=country_ids,
-                            country_regions=country_regions,
-                            year_range=year_range,
-                        )
+        'index.html',
+        countries=COUNTRIES,
+        pca_data=pca_data,
+        timeseries=timeseries,
+        features=feature_cols,
+        country_ids=country_ids,
+        country_regions=_REGIONS,
+        year_range=year_range,
+    )
+
 
 def main():
     app.run(debug=True, port=5000)
