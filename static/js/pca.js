@@ -19,10 +19,11 @@ const PCAChart = (() => {
   const innerW = W - margin.left - margin.right;
   const innerH = H - margin.top  - margin.bottom;
 
-  // Region lookup is populated at render() time from server-provided data.
+  // Region → colour (categorical, ≤7 regions). schemeTableau10 is
+  // perceptually distinct and colourblind-friendly, the standard choice for
+  // categorical encoding at this cardinality.
   let _regionMap = {};
-  const colorScale = d3.scaleOrdinal()
-    .range(d3.schemeTableau10.concat(d3.schemePaired));
+  const colorScale = d3.scaleOrdinal().range(d3.schemeTableau10);
 
   function countryColor(c) { return colorScale(_regionMap[c] ?? 'Other'); }
 
@@ -46,7 +47,8 @@ const PCAChart = (() => {
   const radiusScale = d3.scaleSqrt().range([2.5, 8]);
 
   function render(pcaData, timeseries, countryRegions) {
-    const { countries, pca_coords, explained_variance, year } = pcaData;
+    const { countries, pca_coords, explained_variance, year: pcaYear } = pcaData;
+    const year = pcaYear;
 
     // Bind region data — derived in backend from static/data/regions.json.
     _regionMap = countryRegions || {};
@@ -190,12 +192,14 @@ const PCAChart = (() => {
       });
     }
 
-    // ── Radius encoding — driven by current indicator+year ──────────────
+    // ── Radius encoding — driven by indicator at the fixed PCA year ─────
+    // PCA coords are computed on the most-recent year only, so the scatter
+    // is a snapshot of that year. Encoding radius against the slider year
+    // would mix a moving-year quantity into a fixed-year view — confusing.
     function applyRadius() {
       const indicator = State.getIndicator();
-      const year      = State.getYear();
 
-      if (!indicator || year == null) {
+      if (!indicator) {
         dots.transition().duration(250).attr('r', BASE_RADIUS);
         return;
       }
@@ -206,7 +210,7 @@ const PCAChart = (() => {
         if (!ts) continue;
         const vals = ts[indicator];
         if (!vals) continue;
-        const idx = ts.years.indexOf(year);
+        const idx = ts.years.indexOf(pcaYear);
         if (idx < 0) continue;
         const v = vals[idx];
         if (v != null) values[d.country] = v;
@@ -230,7 +234,6 @@ const PCAChart = (() => {
     State.on('change',    applyDotStyling);
     State.on('hover',     applyDotStyling);
     State.on('brush',     applyDotStyling);
-    State.on('year',      applyRadius);
     State.on('indicator', applyRadius);
 
     // ── Legend ──────────────────────────────────────────────────────────
@@ -247,5 +250,5 @@ const PCAChart = (() => {
         });
   }
 
-  return { render, countryColor };
+  return { render };
 })();

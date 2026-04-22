@@ -2,7 +2,7 @@
  * map.js — Task 4/5/6: world choropleth + coordinated interactions.
  *
  * Topology source: world-atlas v2 countries-50m (ISO numeric feature IDs).
- * Colour: d3.interpolateViridis at (State.indicator, State.year). No indicator
+ * Colour: d3.interpolateBlues at (State.indicator, State.year). No indicator
  * picked → neutral grey. Brush from PCA dims non-brushed project countries.
  * Paths never re-appended; fills are transitioned via selection.transition().
  *
@@ -13,24 +13,17 @@
  */
 
 const MapChart = (() => {
-  const TOPO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json';
+  const TOPO_URL = '/static/data/world-topo.json';
   const W = 800, H = 420;
 
-  // Curated details-on-demand set — diverse mix across economy, demographics,
-  // and land use. Falls back to features.slice(0, 8) if any entry is missing.
-  const PREFERRED_DETAIL_FEATURES = [
-    'GDP per capita (current US$)',
-    'Population, total',
-    'Birth rate, crude (per 1,000 people)',
-    'Death rate, crude (per 1,000 people)',
-    'Mortality rate, infant (per 1,000 live births)',
-    'Agricultural land (% of land area)',
-    'Forest area (sq. km)',
-    'Rural population (% of total population)',
-  ];
+  const DETAIL_COUNT = 8;
+
+  // Pick DETAIL_COUNT features evenly spread across the list so the tooltip
+  // samples the feature set rather than just the alphabetic prefix.
   function pickDetailFeatures(features) {
-    const avail = PREFERRED_DETAIL_FEATURES.filter(f => features.includes(f));
-    return avail.length === PREFERRED_DETAIL_FEATURES.length ? avail : features.slice(0, 8);
+    if (features.length <= DETAIL_COUNT) return features;
+    const step = features.length / DETAIL_COUNT;
+    return Array.from({ length: DETAIL_COUNT }, (_, i) => features[Math.floor(i * step)]);
   }
 
   const fmt = d3.format(',.2f');
@@ -39,12 +32,12 @@ const MapChart = (() => {
   function showTip(event, html) {
     tooltip.classed('hidden', false).html(html)
       .style('left', (event.clientX + 14) + 'px')
-      .style('top',  (event.clientY - 10) + 'px');
+      .style('top', (event.clientY - 10) + 'px');
   }
   function moveTip(event) {
     tooltip
       .style('left', (event.clientX + 14) + 'px')
-      .style('top',  (event.clientY - 10) + 'px');
+      .style('top', (event.clientY - 10) + 'px');
   }
   function hideTip() { tooltip.classed('hidden', true); }
 
@@ -101,7 +94,10 @@ const MapChart = (() => {
       f.properties.name_mapped = idToName[f.id] || null;
     });
 
-    const colorScale = d3.scaleSequential(d3.interpolateViridis);
+    // Sequential single-hue scale for a quantitative indicator. Blues keeps
+    // a clear light→dark magnitude ordering without competing with the
+    // selection/highlight yellow used elsewhere.
+    const colorScale = d3.scaleSequential(d3.interpolateBlues);
     const projection = d3.geoNaturalEarth1().fitSize([W, H], { type: 'Sphere' });
     const pathGen = d3.geoPath().projection(projection);
 
@@ -122,6 +118,49 @@ const MapChart = (() => {
       .style('pointer-events', 'none');
     const hoverPath = overlay.append('path').attr('class', 'map-hover');
     const selectedPath = overlay.append('path').attr('class', 'map-selected');
+
+    // ── Colour legend ─────────────────────────────────────────────────────
+    // Gradient built once; the axis below it is rescaled whenever the color
+    // scale domain changes (new indicator / new year).
+    const LEGEND_W = 320, LEGEND_H = 18;
+    const LEGEND_TOP = 26, LEGEND_BOTTOM = 24;
+    const legendSvg = d3.select('#map-legend').append('svg')
+      .attr('width', LEGEND_W + 20)
+      .attr('height', LEGEND_TOP + LEGEND_H + LEGEND_BOTTOM);
+    const legendG = legendSvg.append('g').attr('transform', `translate(10, ${LEGEND_TOP})`);
+
+    const gradientId = 'map-legend-gradient';
+    const gradient = legendSvg.append('defs').append('linearGradient')
+      .attr('id', gradientId)
+      .attr('x1', '0%').attr('x2', '100%');
+    d3.range(0, 1.01, 0.1).forEach(t => {
+      gradient.append('stop')
+        .attr('offset', `${t * 100}%`)
+        .attr('stop-color', d3.interpolateBlues(t));
+    });
+    legendG.append('rect')
+      .attr('width', LEGEND_W).attr('height', LEGEND_H)
+      .attr('fill', `url(#${gradientId})`)
+      .attr('stroke', '#999').attr('stroke-width', 0.5);
+    const legendAxisG = legendG.append('g')
+      .attr('class', 'legend-axis')
+      .attr('transform', `translate(0, ${LEGEND_H})`);
+    const legendTitle = legendG.append('text')
+      .attr('class', 'legend-title')
+      .attr('x', 0).attr('y', -10)
+      .style('fill', '#333');
+
+    const fmtLegend = d3.format('~s');
+    function updateLegend(domain, indicator) {
+      legendTitle.text(indicator || '');
+      if (!domain || domain[0] == null) {
+        legendAxisG.selectAll('*').remove();
+        return;
+      }
+      const axisScale = d3.scaleLinear().domain(domain).range([0, LEGEND_W]);
+      legendAxisG.transition().duration(250)
+        .call(d3.axisBottom(axisScale).ticks(4).tickFormat(fmtLegend));
+    }
 
     // ── Zoom & pan ─────────────────────────────────────────────────────────
     // translateExtent is in *world* coordinates and scales with the zoom
@@ -153,6 +192,7 @@ const MapChart = (() => {
 
     function applyNeutral() {
       paths.attr('fill', d => d.properties.name_mapped ? '#c8c8c8' : '#eee');
+      updateLegend(null, null);
     }
 
     function refreshColors() {
@@ -164,6 +204,7 @@ const MapChart = (() => {
       const ext = d3.extent(Object.values(values));
       if (ext[0] != null) colorScale.domain(ext);
       applyColors(values, true);
+      updateLegend(ext, indicator);
     }
 
     // ── Pointer interactions ───────────────────────────────────────────────
@@ -188,7 +229,7 @@ const MapChart = (() => {
         if (name) State.select(name);
       });
 
-    // Safety net — hide tooltip if the pointer exits the SVG without firing a
+    // Safety net: hide tooltip if the pointer exits the SVG without firing a
     // final path.mouseout (happens with fast diagonal exits).
     svg.on('mouseleave', hideTip);
 
@@ -216,11 +257,6 @@ const MapChart = (() => {
 
     // ── Populate indicator select (ownership of the DOM change is in main.js) ─
     const select = d3.select('#indicator-select');
-    select.append('option')
-      .attr('value', '')
-      .attr('disabled', true)
-      .attr('selected', true)
-      .text('Select an indicator');
     features.forEach(f => select.append('option').attr('value', f).text(f));
 
     applyNeutral();

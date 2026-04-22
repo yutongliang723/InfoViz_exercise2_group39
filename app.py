@@ -1,38 +1,39 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 import json
-import os
 
 app = Flask(__name__)
 
-COUNTRIES = [
-    'Afghanistan', 'Albania', 'Algeria', 'Angola', 'Argentina', 'Armenia',
-    'Australia', 'Austria', 'Azerbaijan', 'Brazil', 'Bulgaria', 'Cameroon',
-    'Chile', 'China', 'Colombia', 'Croatia', 'Cuba', 'Cyprus',
-    'Czech Republic', 'Ecuador', 'Egypt, Arab Rep.', 'Eritrea', 'Ethiopia',
-    'France', 'Germany', 'Ghana', 'Greece', 'India', 'Indonesia',
-    'Iran, Islamic Rep.', 'Iraq', 'Ireland', 'Italy', 'Japan', 'Jordan',
-    'Kazakhstan', 'Kenya', 'Lebanon', 'Malta', 'Mexico', 'Morocco',
-    'Pakistan', 'Peru', 'Philippines', 'Russian Federation',
-    'Syrian Arab Republic', 'Tunisia', 'Turkey', 'Ukraine'
-]
+
+def load_regions():
+    with open('static/data/regions.json') as f:
+        return json.load(f)
+
+
+# Scope of analysis is defined by the regions data file: every country with a
+# region assignment is in scope. Keeps the country set in one place (data),
+# not duplicated between Python and JSON.
+COUNTRIES = list(load_regions().keys())
 
 
 def load_and_filter_data():
     clean_data = pd.read_csv("static/data/clean_data.csv")
-    df = clean_data[clean_data['Country Name'].isin(COUNTRIES)] # filter to only the specified countries
+    df = clean_data[clean_data['Country Name'].isin(COUNTRIES)]
     return df
 
 
 def compute_pca(df): # task 2: compute pca on the most recent year's data
-    
+
     most_recent_year = df['year'].max() # get the most recent year
     df_recent = df[df['year'] == most_recent_year].copy()
-    feature_cols = df_recent.select_dtypes(include=[np.number]).columns.tolist() # get numeric feature columns
-    df_recent = df_recent.dropna(subset=feature_cols) # drop missing values
+    # Numeric feature columns only, minus the 'year' identifier (constant in
+    # this subset, so it contributes zero variance — but we still don't want
+    # it listed as a feature in the scatter's "Features used" panel).
+    feature_cols = [c for c in df_recent.select_dtypes(include=[np.number]).columns if c != 'year']
+    df_recent = df_recent.dropna(subset=feature_cols)
 
     # sxtract feature matrix
     X = df_recent[feature_cols].values
@@ -65,11 +66,6 @@ def build_country_ids(df):
         iso_alpha3_to_numeric = json.load(f)
     name_to_code = df[['Country Name', 'Country Code']].drop_duplicates().set_index('Country Name')['Country Code'].to_dict()
     return {name: iso_alpha3_to_numeric[code] for name, code in name_to_code.items() if code in iso_alpha3_to_numeric}
-
-
-def load_regions():
-    with open('static/data/regions.json') as f:
-        return json.load(f)
 
 
 @app.route('/')
@@ -108,18 +104,6 @@ def index():
                             country_regions=country_regions,
                             year_range=year_range,
                         )
-
-@app.route('/api/data')
-def api_data():
-    df = load_and_filter_data()
-    return jsonify(df.to_dict(orient='records'))
-
-
-@app.route('/api/pca')
-def api_pca():
-    df = load_and_filter_data()
-    return jsonify(compute_pca(df))
-
 
 def main():
     app.run(debug=True, port=5000)

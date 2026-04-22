@@ -32,6 +32,13 @@
   });
   TimeSeriesChart.render(TIMESERIES);
 
+  // Pre-select the first indicator so every view has something to show on
+  // load — otherwise the year slider appears broken until the user finds
+  // the indicator dropdown.
+  const indicatorSelect = document.getElementById('indicator-select');
+  indicatorSelect.value = FEATURES[0];
+  State.setIndicator(FEATURES[0]);
+
   // ── DOM → State wiring ───────────────────────────────────────────────
   slider.addEventListener('input', (e) => {
     yearLabel.textContent = e.target.value;
@@ -41,9 +48,5 @@
   d3.select('#indicator-select').on('change', (event) => {
     State.setIndicator(event.target.value);
   });
-
-  console.log('[Exercise 2] All views initialised.');
-  console.log(`PCA year: ${PCA_DATA.year}, countries: ${PCA_DATA.countries.length}`);
-  console.log(`Explained variance — PC1: ${(PCA_DATA.explained_variance[0] * 100).toFixed(1)}%, PC2: ${(PCA_DATA.explained_variance[1] * 100).toFixed(1)}%`);
 
 })();
