@@ -1,28 +1,51 @@
-/**
- * state.js — Shared application state for coordinated views.
- * Any view that wants to react to selection changes subscribes
- * via State.on('change', callback).
- */
+// Shared state singleton for coordinated views.
+// Events: 'change' {selected}, 'brush' {brushed}, 'hover' {hovered},
+//         'year' {year}, 'indicator' {indicator}
+// Setters always emit even when the value is unchanged.
 const State = (() => {
-  let _selected = null;          // currently selected country (string | null)
+  let _selected  = null;
+  let _brushed   = [];
+  let _hovered   = null;
+  let _year      = null;
+  let _indicator = '';
   const _listeners = [];
 
-  function on(event, fn) {
-    _listeners.push({ event, fn });
-  }
-
+  function on(event, fn) { _listeners.push({ event, fn }); }
   function emit(event, data) {
-    _listeners
-      .filter(l => l.event === event)
-      .forEach(l => l.fn(data));
+    _listeners.filter(l => l.event === event).forEach(l => l.fn(data));
   }
 
   function select(country) {
-    _selected = (_selected === country) ? null : country;  // toggle
+    _selected = (_selected === country) ? null : country;   // toggle
     emit('change', { selected: _selected });
   }
 
-  function getSelected() { return _selected; }
+  function hover(country) {
+    _hovered = country ?? null;
+    emit('hover', { hovered: _hovered });
+  }
 
-  return { on, select, getSelected };
+  function setBrushed(list) {
+    _brushed = Array.isArray(list) ? list : [];
+    emit('brush', { brushed: _brushed });
+  }
+
+  function setYear(year) {
+    _year = (year == null) ? null : +year;
+    emit('year', { year: _year });
+  }
+
+  function setIndicator(indicator) {
+    _indicator = indicator || '';
+    emit('indicator', { indicator: _indicator });
+  }
+
+  return {
+    on, select, hover, setBrushed, setYear, setIndicator,
+    getSelected:  () => _selected,
+    getBrushed:   () => _brushed,
+    getHovered:   () => _hovered,
+    getYear:      () => _year,
+    getIndicator: () => _indicator,
+  };
 })();
