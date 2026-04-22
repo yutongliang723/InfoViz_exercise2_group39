@@ -13,9 +13,7 @@ def load_regions():
         return json.load(f)
 
 
-# Scope of analysis is defined by the regions data file: every country with a
-# region assignment is in scope. Keeps the country set in one place (data),
-# not duplicated between Python and JSON.
+# Country set is derived from regions.json so it lives in one place.
 COUNTRIES = list(load_regions().keys())
 
 
@@ -25,43 +23,32 @@ def load_and_filter_data():
     return df
 
 
-def compute_pca(df): # task 2: compute pca on the most recent year's data
-
-    most_recent_year = df['year'].max() # get the most recent year
+def compute_pca(df):
+    most_recent_year = df['year'].max()
     df_recent = df[df['year'] == most_recent_year].copy()
-    # Numeric feature columns only, minus the 'year' identifier (constant in
-    # this subset, so it contributes zero variance — but we still don't want
-    # it listed as a feature in the scatter's "Features used" panel).
+    # Exclude 'year': it's constant in this subset and not a meaningful feature.
     feature_cols = [c for c in df_recent.select_dtypes(include=[np.number]).columns if c != 'year']
     df_recent = df_recent.dropna(subset=feature_cols)
 
-    # sxtract feature matrix
     X = df_recent[feature_cols].values
     countries = df_recent['Country Name'].tolist()
-    scaler = StandardScaler() # scale features 
-    X_scaled = scaler.fit_transform(X)
+    X_scaled = StandardScaler().fit_transform(X)
 
-    pca = PCA(n_components=2) # apply PCA to 2 components
+    pca = PCA(n_components=2)
     X_pca = pca.fit_transform(X_scaled)
 
-    explained_variance = pca.explained_variance_ratio_.tolist() # for axis labels
-    loadings = pca.components_.tolist() # loadings for optional biplot
-
-    result = {
+    return {
         'year': int(most_recent_year),
         'countries': countries,
         'pca_coords': X_pca.tolist(),
-        'explained_variance': explained_variance,
+        'explained_variance': pca.explained_variance_ratio_.tolist(),
         'feature_names': feature_cols,
-        'loadings': loadings,
+        'loadings': pca.components_.tolist(),
     }
-    return result
 
 
 def build_country_ids(df):
-    # Combine CSV alpha-3 codes with the ISO-3166 numeric lookup to produce
-    # {country_name: "padded-3-digit-numeric"} — keyed exactly the way
-    # world-atlas topojson features are keyed (e.g. Albania → "008").
+    # Maps country name to padded ISO numeric string ("008") matching world-atlas topology IDs.
     with open('static/data/iso_numeric.json') as f:
         iso_alpha3_to_numeric = json.load(f)
     name_to_code = df[['Country Name', 'Country Code']].drop_duplicates().set_index('Country Name')['Country Code'].to_dict()
@@ -70,12 +57,10 @@ def build_country_ids(df):
 
 @app.route('/')
 def index():
-    df = load_and_filter_data() # task 1: load and filter data
-    pca_data = compute_pca(df) # task 2 compute PCA
+    df = load_and_filter_data()
+    pca_data = compute_pca(df)
 
-    # prepare time-series data for all countries and years
-    # exclude non-numeric identifier columns so the indicator dropdown only
-    # offers plottable features (Country Code is a string like "ALB").
+    # Exclude identifier columns so the indicator dropdown only shows numeric features.
     feature_cols = [c for c in df.columns if c not in ['Country Name', 'Country Code', 'year']]
     timeseries = {}
     for country in COUNTRIES:

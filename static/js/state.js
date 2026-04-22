@@ -1,16 +1,7 @@
-/**
- * state.js — Shared application state for coordinated views.
- *
- * Events:
- *   'change'    — { selected }   — single-country selection (toggles)
- *   'brush'     — { brushed }    — array of countries from the PCA brush
- *   'hover'     — { hovered }    — transient hover target (PCA or map)
- *   'year'      — { year }       — slider year (int)
- *   'indicator' — { indicator }  — current #indicator-select value ('' = none)
- *
- * Subscribers register via State.on(event, cb). Setters always emit, even if
- * the value didn't change — keeps it simple and lets subscribers decide.
- */
+// Shared state singleton for coordinated views.
+// Events: 'change' {selected}, 'brush' {brushed}, 'hover' {hovered},
+//         'year' {year}, 'indicator' {indicator}
+// Setters always emit even when the value is unchanged.
 const State = (() => {
   let _selected  = null;
   let _brushed   = [];

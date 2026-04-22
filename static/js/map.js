@@ -1,25 +1,10 @@
-/**
- * map.js — Task 4/5/6: world choropleth + coordinated interactions.
- *
- * Topology source: world-atlas v2 countries-50m (ISO numeric feature IDs).
- * Colour: d3.interpolateBlues at (State.indicator, State.year). No indicator
- * picked → neutral grey. Brush from PCA dims non-brushed project countries.
- * Paths never re-appended; fills are transitioned via selection.transition().
- *
- * Country identification is fully data-driven: the server ships a
- * `country_ids` map (name → padded-3-digit ISO numeric) built from the CSV's
- * Country Code column + an ISO-3166 reference table. No country names are
- * hardcoded in this module.
- */
-
 const MapChart = (() => {
   const TOPO_URL = '/static/data/world-topo.json';
   const W = 800, H = 420;
 
   const DETAIL_COUNT = 8;
 
-  // Pick DETAIL_COUNT features evenly spread across the list so the tooltip
-  // samples the feature set rather than just the alphabetic prefix.
+  // Sample features evenly across the list rather than just the alphabetic prefix.
   function pickDetailFeatures(features) {
     if (features.length <= DETAIL_COUNT) return features;
     const step = features.length / DETAIL_COUNT;
@@ -44,9 +29,6 @@ const MapChart = (() => {
   function buildTooltipHtml(name, ts, detailFeatures) {
     if (!ts || !ts.years) return `<strong>${name}</strong><div class="muted">No data</div>`;
 
-    // Year is driven by the slider via State. If the slider value isn't in
-    // this country's year list, fall back to the last available year so we
-    // never render an empty tooltip.
     const stateYear = State.getYear();
     let idx = ts.years.indexOf(stateYear);
     if (idx < 0) idx = ts.years.length - 1;
@@ -84,7 +66,6 @@ const MapChart = (() => {
     const world = await d3.json(TOPO_URL);
     const countryFeatures = topojson.feature(world, world.objects.countries).features;
 
-    // Invert name→id to id→name for topojson feature lookup.
     const idToName = Object.fromEntries(
       Object.entries(countryIds).map(([name, id]) => [id, name])
     );
@@ -94,9 +75,6 @@ const MapChart = (() => {
       f.properties.name_mapped = idToName[f.id] || null;
     });
 
-    // Sequential single-hue scale for a quantitative indicator. Blues keeps
-    // a clear light→dark magnitude ordering without competing with the
-    // selection/highlight yellow used elsewhere.
     const colorScale = d3.scaleSequential(d3.interpolateBlues);
     const projection = d3.geoNaturalEarth1().fitSize([W, H], { type: 'Sphere' });
     const pathGen = d3.geoPath().projection(projection);
@@ -119,9 +97,7 @@ const MapChart = (() => {
     const hoverPath = overlay.append('path').attr('class', 'map-hover');
     const selectedPath = overlay.append('path').attr('class', 'map-selected');
 
-    // ── Colour legend ─────────────────────────────────────────────────────
-    // Gradient built once; the axis below it is rescaled whenever the color
-    // scale domain changes (new indicator / new year).
+    // Gradient built once; axis rescaled on domain change.
     const LEGEND_W = 320, LEGEND_H = 18;
     const LEGEND_TOP = 26, LEGEND_BOTTOM = 24;
     const legendSvg = d3.select('#map-legend').append('svg')
@@ -162,10 +138,6 @@ const MapChart = (() => {
         .call(d3.axisBottom(axisScale).ticks(4).tickFormat(fmtLegend));
     }
 
-    // ── Zoom & pan ─────────────────────────────────────────────────────────
-    // translateExtent is in *world* coordinates and scales with the zoom
-    // factor automatically, so clamping to [0,0]→[W,H] keeps the map edge
-    // from ever leaving the viewport at any zoom level.
     const zoom = d3.zoom()
       .scaleExtent([1, 8])
       .translateExtent([[0, 0], [W, H]])
@@ -207,13 +179,12 @@ const MapChart = (() => {
       updateLegend(ext, indicator);
     }
 
-    // ── Pointer interactions ───────────────────────────────────────────────
     const detailFeatures = pickDetailFeatures(features);
 
     paths
       .on('mouseover', (event, d) => {
         const name = d.properties.name_mapped;
-        if (!name) return;                       // ignore non-project countries
+        if (!name) return;
         State.hover(name);
         showTip(event, buildTooltipHtml(name, timeseries[name], detailFeatures));
       })
@@ -229,11 +200,8 @@ const MapChart = (() => {
         if (name) State.select(name);
       });
 
-    // Safety net: hide tooltip if the pointer exits the SVG without firing a
-    // final path.mouseout (happens with fast diagonal exits).
     svg.on('mouseleave', hideTip);
 
-    // ── State subscriptions ────────────────────────────────────────────────
     State.on('hover', ({ hovered }) => {
       const f = featureFor(hovered);
       hoverPath.attr('d', f ? pathGen(f) : null);
@@ -255,7 +223,6 @@ const MapChart = (() => {
     State.on('indicator', refreshColors);
     State.on('year', refreshColors);
 
-    // ── Populate indicator select (ownership of the DOM change is in main.js) ─
     const select = d3.select('#indicator-select');
     features.forEach(f => select.append('option').attr('value', f).text(f));
 

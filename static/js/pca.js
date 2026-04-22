@@ -1,17 +1,3 @@
-/**
- * pca.js — Task 2/5/6: 2-D PCA scatterplot with brush + coordinated state.
- *
- * Each dot = one country. Dots:
- *   • Colour   — region (categorical, same palette reused by TS multi-line)
- *   • Radius   — current indicator value at current State.year (encodes Task 6)
- *   • Hover    — tooltip + shared State hover
- *   • Click    — toggles single-country selection
- *   • Brush    — rectangular d3.brush → State.setBrushed(list)
- *
- * Region and country-label data are injected from the server
- * (static/data/regions.json), not hardcoded here.
- */
-
 const PCAChart = (() => {
 
   const margin = { top: 20, right: 20, bottom: 55, left: 60 };
@@ -19,9 +5,7 @@ const PCAChart = (() => {
   const innerW = W - margin.left - margin.right;
   const innerH = H - margin.top  - margin.bottom;
 
-  // Region → colour (categorical, ≤7 regions). schemeTableau10 is
-  // perceptually distinct and colourblind-friendly, the standard choice for
-  // categorical encoding at this cardinality.
+  // Tableau10 is perceptually distinct and colourblind-friendly for up to 10 categories.
   let _regionMap = {};
   const colorScale = d3.scaleOrdinal().range(d3.schemeTableau10);
 
@@ -36,13 +20,11 @@ const PCAChart = (() => {
   }
   function hideTip() { tooltip.classed('hidden', true); }
 
-  // Keep labels short without a hardcoded abbreviation table: drop anything
-  // after the first comma (handles World-Bank-style "Egypt, Arab Rep.").
+  // Drop anything after the first comma: "Egypt, Arab Rep." -> "Egypt"
   function shortLabel(name) {
     return name.split(',')[0];
   }
 
-  // Radius scale — redefined on indicator/year change so the range is data-driven.
   const BASE_RADIUS = 3;
   const radiusScale = d3.scaleSqrt().range([2.5, 8]);
 
@@ -50,7 +32,6 @@ const PCAChart = (() => {
     const { countries, pca_coords, explained_variance, year: pcaYear } = pcaData;
     const year = pcaYear;
 
-    // Bind region data — derived in backend from static/data/regions.json.
     _regionMap = countryRegions || {};
     colorScale.domain([...new Set(Object.values(_regionMap))]);
 
@@ -82,14 +63,12 @@ const PCAChart = (() => {
       .append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // Grid
     svg.append('g').attr('class', 'grid')
       .attr('transform', `translate(0,${innerH})`)
       .call(d3.axisBottom(xScale).tickSize(-innerH).tickFormat(''));
     svg.append('g').attr('class', 'grid')
       .call(d3.axisLeft(yScale).tickSize(-innerW).tickFormat(''));
 
-    // Axes
     const ev = explained_variance.map(v => (v * 100).toFixed(1));
     svg.append('g').attr('class','axis').attr('transform', `translate(0,${innerH})`)
       .call(d3.axisBottom(xScale).ticks(4));
@@ -106,10 +85,8 @@ const PCAChart = (() => {
       .attr('text-anchor','middle')
       .text(`PC2 (${ev[1]}% variance)`);
 
-    // ── Brush layer — above grid/axes, below dots so dot events win ──────
     const brushG = svg.append('g').attr('class', 'brush');
 
-    // ── Dots ────────────────────────────────────────────────────────────
     const dots = svg.selectAll('.pca-dot')
       .data(data, d => d.country)
       .join('circle')
@@ -129,7 +106,6 @@ const PCAChart = (() => {
         .text(d => shortLabel(d.country))
         .style('pointer-events', 'none');
 
-    // ── Pointer interaction ──────────────────────────────────────────────
     dots
       .on('mouseover', (event, d) => {
         showTip(event,
@@ -148,7 +124,6 @@ const PCAChart = (() => {
       .on('mouseout', () => { hideTip(); State.hover(null); })
       .on('click', (event, d) => State.select(d.country));
 
-    // ── Brush → State.setBrushed ────────────────────────────────────────
     function handleBrush(event) {
       if (!event.selection) { State.setBrushed([]); return; }
       const [[x0, y0], [x1, y1]] = event.selection;
@@ -166,9 +141,6 @@ const PCAChart = (() => {
         .on('start brush end', handleBrush)
     );
 
-    // ── Unified styling — single source of truth for all dot classes ────
-    // Driven by any state change. Never re-appends, only toggles classes
-    // and transitions attributes.
     function applyDotStyling() {
       const brushedSet = new Set(State.getBrushed());
       const selected   = State.getSelected();
@@ -192,10 +164,8 @@ const PCAChart = (() => {
       });
     }
 
-    // ── Radius encoding — driven by indicator at the fixed PCA year ─────
-    // PCA coords are computed on the most-recent year only, so the scatter
-    // is a snapshot of that year. Encoding radius against the slider year
-    // would mix a moving-year quantity into a fixed-year view — confusing.
+    // PCA coords are fixed to pcaYear; encoding radius against the slider year
+    // would mix a moving quantity into a fixed-year view.
     function applyRadius() {
       const indicator = State.getIndicator();
 
@@ -230,13 +200,11 @@ const PCAChart = (() => {
         });
     }
 
-    // ── State subscriptions ─────────────────────────────────────────────
     State.on('change',    applyDotStyling);
     State.on('hover',     applyDotStyling);
     State.on('brush',     applyDotStyling);
     State.on('indicator', applyRadius);
 
-    // ── Legend ──────────────────────────────────────────────────────────
     const legend = d3.select('#pca-legend');
     legend.selectAll('.legend-item')
       .data(colorScale.domain())

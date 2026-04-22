@@ -1,20 +1,3 @@
-/**
- * timeseries.js — Task 5/6: coordinated time-series line chart.
- *
- * Data is driven by shared State:
- *   • brushed (PCA brush) non-empty → one line per brushed country
- *   • otherwise selected               → single line
- *   • otherwise                        → placeholder hint
- *
- * Multi-line mode renders a below-chart legend (country name + region
- * swatch) instead of inline labels, to avoid overlap. Hover on either a
- * line or a legend entry highlights the pair and shows a tooltip with
- * the value at the current State.year.
- *
- * The chart scaffold (axes, line group, year line, legend container) is
- * built once; updates use keyed data-joins.
- */
-
 const TimeSeriesChart = (() => {
   const margin = { top: 20, right: 20, bottom: 50, left: 65 };
   const W = 500, H = 300;
@@ -29,24 +12,16 @@ const TimeSeriesChart = (() => {
     .x(d => xScale(d.year))
     .y(d => yScale(d.value));
 
-  // Per-country categorical scale scoped to this chart. PCAChart colours by
-  // region (correct for showing region clusters in the scatter), but reusing
-  // it here would collapse all lines to a single hue whenever the selected
-  // set happens to come from one region. d3.quantize over interpolateRainbow
-  // gives a distinct hue for every country in the full project set, so
-  // uniqueness holds for any subset the user brushes.
+  // Per-country colors independent of region; rainbow gives distinct hues for any subset.
   const _tsColor = d3.scaleOrdinal();
 
-  // Module state, wired in render().
   let _timeseries = null;
   let _xAxisG, _yAxisG, _hintText, _lineGroup, _yearLine, _yLabel, _legend, _legendHint;
 
-  // Country → points[], refreshed on each update(); used by the tooltip.
   const _pointsByCountry = new Map();
 
   const tooltip = d3.select('#tooltip');
 
-  // ── Data helpers ──────────────────────────────────────────────────────
   function seriesFor(country, indicator) {
     const ts = _timeseries[country];
     if (!ts) return null;
@@ -56,7 +31,6 @@ const TimeSeriesChart = (() => {
     return { country, points };
   }
 
-  // ── Shared interaction helpers (defined once, not per update) ────────
   function highlight(country) {
     _lineGroup.selectAll('.ts-line')
       .classed('faded',       d => country && d.country !== country)
@@ -78,14 +52,12 @@ const TimeSeriesChart = (() => {
   }
   function hideTip() { tooltip.classed('hidden', true); }
 
-  // Attached to both lines and legend items so hover works from either side.
   const hoverHandlers = {
     mouseover: (event, d) => { highlight(d.country); showTip(event, d.country); },
     mousemove: (event, d) => showTip(event, d.country),
     mouseout:  ()          => { highlight(null); hideTip(); },
   };
 
-  // ── Rendering sub-routines ───────────────────────────────────────────
   function clearPlot(hintMessage) {
     _lineGroup.selectAll('.ts-line').remove();
     _legend.selectAll('.legend-item').remove();
@@ -124,7 +96,6 @@ const TimeSeriesChart = (() => {
   }
 
   function updateLegend(series, multi) {
-    // Legend only helps when disambiguating ≥2 lines.
     const data = multi ? series : [];
 
     const items = _legend.selectAll('.legend-item')
@@ -147,7 +118,7 @@ const TimeSeriesChart = (() => {
     merged.select('.legend-label')
       .text(d => d.country);
 
-    // Hint only when >2 lines — at 1–2 lines the legend is self-explanatory.
+    // Hint only for >2 lines; at 1-2 the legend is self-explanatory.
     const hintData = series.length > 2 ? ['Hover a legend entry to highlight its line'] : [];
     _legendHint.selectAll('p').data(hintData)
       .join('p')
@@ -164,7 +135,6 @@ const TimeSeriesChart = (() => {
       .attr('y1', 0).attr('y2', innerH);
   }
 
-  // ── Main update orchestrator ─────────────────────────────────────────
   function update() {
     const indicator = State.getIndicator();
     const brushed   = State.getBrushed();
@@ -211,7 +181,6 @@ const TimeSeriesChart = (() => {
     updateYearLine(year);
   }
 
-  // ── One-time scaffold ────────────────────────────────────────────────
   function render(timeseries) {
     _timeseries = timeseries;
 
@@ -253,8 +222,6 @@ const TimeSeriesChart = (() => {
       .attr('class', 'ts-year-line')
       .attr('display', 'none');
 
-    // Hint lives between the chart and the legend; content is managed by a
-    // d3 data-join in updateLegend so it appears only for >2 lines.
     _legendHint = d3.select('#ts-panel').insert('div', '#ts-legend')
       .attr('class', 'ts-legend-hint');
     _legend = d3.select('#ts-legend');
