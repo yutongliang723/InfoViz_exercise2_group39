@@ -2,7 +2,7 @@ const TimeSeriesChart = (() => {
   const margin = { top: 20, right: 20, bottom: 50, left: 65 };
   const W = 500, H = 300;
   const innerW = W - margin.left - margin.right;
-  const innerH = H - margin.top  - margin.bottom;
+  const innerH = H - margin.top - margin.bottom;
 
   const xScale = d3.scaleLinear().range([0, innerW]);
   const yScale = d3.scaleLinear().range([innerH, 0]);
@@ -22,6 +22,9 @@ const TimeSeriesChart = (() => {
 
   const tooltip = d3.select('#tooltip');
 
+  const fmtAxis = d3.format('~s');
+  const fmtTooltip = d3.format(',.2f');
+
   function seriesFor(country, indicator) {
     const ts = _timeseries[country];
     if (!ts) return null;
@@ -33,10 +36,10 @@ const TimeSeriesChart = (() => {
 
   function highlight(country) {
     _lineGroup.selectAll('.ts-line')
-      .classed('faded',       d => country && d.country !== country)
+      .classed('faded', d => country && d.country !== country)
       .classed('highlighted', d => d.country === country);
     _legend.selectAll('.legend-item')
-      .classed('faded',       d => country && d.country !== country)
+      .classed('faded', d => country && d.country !== country)
       .classed('highlighted', d => d.country === country);
   }
 
@@ -44,18 +47,18 @@ const TimeSeriesChart = (() => {
     const points = _pointsByCountry.get(country);
     const yr = State.getYear();
     const atYear = points?.find(p => p.year === yr);
-    const valTxt = atYear?.value != null ? atYear.value.toPrecision(4) : '—';
+    const valTxt = atYear?.value != null ? fmtTooltip(atYear.value) : '—';
     tooltip.classed('hidden', false)
       .html(`<strong>${country}</strong><br>${yr ?? ''}: ${valTxt}`)
       .style('left', (event.clientX + 14) + 'px')
-      .style('top',  (event.clientY - 10) + 'px');
+      .style('top', (event.clientY - 10) + 'px');
   }
   function hideTip() { tooltip.classed('hidden', true); }
 
   const hoverHandlers = {
     mouseover: (event, d) => { highlight(d.country); showTip(event, d.country); },
     mousemove: (event, d) => showTip(event, d.country),
-    mouseout:  ()          => { highlight(null); hideTip(); },
+    mouseout: () => { highlight(null); hideTip(); },
   };
 
   function clearPlot(hintMessage) {
@@ -88,7 +91,7 @@ const TimeSeriesChart = (() => {
       .attr('stroke', d => _tsColor(d.country))
       .on('mouseover', hoverHandlers.mouseover)
       .on('mousemove', hoverHandlers.mousemove)
-      .on('mouseout',  hoverHandlers.mouseout);
+      .on('mouseout', hoverHandlers.mouseout);
 
     merged.transition().duration(400)
       .attr('opacity', multi ? 0.85 : 1)
@@ -111,7 +114,7 @@ const TimeSeriesChart = (() => {
     const merged = enter.merge(items)
       .on('mouseover', hoverHandlers.mouseover)
       .on('mousemove', hoverHandlers.mousemove)
-      .on('mouseout',  hoverHandlers.mouseout);
+      .on('mouseout', hoverHandlers.mouseout);
 
     merged.select('.legend-swatch')
       .style('background', d => _tsColor(d.country));
@@ -137,9 +140,9 @@ const TimeSeriesChart = (() => {
 
   function update() {
     const indicator = State.getIndicator();
-    const brushed   = State.getBrushed();
-    const selected  = State.getSelected();
-    const year      = State.getYear();
+    const brushed = State.getBrushed();
+    const selected = State.getSelected();
+    const year = State.getYear();
 
     _yLabel.text(indicator || '');
 
@@ -165,15 +168,15 @@ const TimeSeriesChart = (() => {
     for (const s of series) _pointsByCountry.set(s.country, s.points);
 
     d3.select('#ts-country').text(
-      series.length === 1 ? `— ${series[0].country}` : `— ${series.length} countries`
+      series.length === 1 ? `: ${series[0].country}` : `— ${series.length} countries`
     );
 
-    const allPoints   = series.flatMap(s => s.points);
+    const allPoints = series.flatMap(s => s.points);
     const definedVals = allPoints.filter(p => p.value != null);
-    xScale.domain(d3.extent(allPoints,   p => p.year));
+    xScale.domain(d3.extent(allPoints, p => p.year));
     yScale.domain(d3.extent(definedVals, p => p.value)).nice();
     _xAxisG.call(d3.axisBottom(xScale).tickFormat(d3.format('d')).ticks(6));
-    _yAxisG.call(d3.axisLeft(yScale).ticks(5));
+    _yAxisG.call(d3.axisLeft(yScale).ticks(5).tickFormat(fmtAxis));
 
     const multi = series.length > 1;
     updateLines(series, multi);
@@ -189,7 +192,7 @@ const TimeSeriesChart = (() => {
 
     const svg = d3.select('#ts-container')
       .append('svg')
-        .attr('viewBox', `0 0 ${W} ${H}`);
+      .attr('viewBox', `0 0 ${W} ${H}`);
 
     const g = svg.append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
@@ -226,10 +229,10 @@ const TimeSeriesChart = (() => {
       .attr('class', 'ts-legend-hint');
     _legend = d3.select('#ts-legend');
 
-    State.on('change',    update);
-    State.on('brush',     update);
+    State.on('change', update);
+    State.on('brush', update);
     State.on('indicator', update);
-    State.on('year',      update);
+    State.on('year', update);
   }
 
   return { render };
