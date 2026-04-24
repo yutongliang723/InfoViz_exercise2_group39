@@ -25,8 +25,28 @@
       <select id="indicator-select"></select>
     </div>
 
-    <!--  PCA scatterplot  -->
+    <!--  Map + PCA side-by-side  -->
     <div class="row">
+
+      <section class="panel" id="map-panel">
+        <h2>Choropleth Map</h2>
+        <div class="map-year-control">
+          <label for="year-slider">Year:</label>
+          <input type="range" id="year-slider" min="{{ year_range.min }}" max="{{ year_range.max }}" step="1"
+            value="{{ year_range.initial }}" />
+          <span id="year-label">{{ year_range.initial }}</span>
+        </div>
+        <p class="hint">Countries coloured by the selected indicator at the chosen year. Click to plot time series.
+          Scroll to zoom, drag to pan.</p>
+        <div id="map-container">
+          <button type="button" id="map-reset-zoom" title="Reset view" aria-label="Reset view">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path fill="currentColor" d="M12 3 4 10v11h5v-6h6v6h5V10z" />
+            </svg>
+          </button>
+        </div>
+        <div id="map-legend"></div>
+      </section>
 
       <section class="panel" id="pca-panel">
         <h2>PCA Scatterplot
@@ -35,33 +55,6 @@
         <p class="hint">Hover or click a dot to highlight the country.</p>
         <div id="pca-container"></div>
         <div id="pca-legend"></div>
-      </section>
-
-    </div>
-
-    <!--  Choropleth map  -->
-    <div class="row">
-
-      <section class="panel" id="map-panel">
-        <h2>Choropleth Map</h2>
-        <div class="map-year-control">
-          <label for="year-slider">Year:</label>
-          <input type="range" id="year-slider"
-                 min="{{ year_range.min }}"
-                 max="{{ year_range.max }}"
-                 step="1"
-                 value="{{ year_range.initial }}" />
-          <span id="year-label">{{ year_range.initial }}</span>
-        </div>
-        <p class="hint">Countries coloured by the selected indicator at the chosen year. Click to plot time series. Scroll to zoom, drag to pan.</p>
-        <div id="map-container">
-          <button type="button" id="map-reset-zoom" title="Reset view" aria-label="Reset view">
-            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-              <path fill="currentColor" d="M12 3 4 10v11h5v-6h6v6h5V10z"/>
-            </svg>
-          </button>
-        </div>
-        <div id="map-legend"></div>
       </section>
 
     </div>
