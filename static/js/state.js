@@ -17,19 +17,15 @@ const State = (() => {
   }
 
 
-  function select(country, multi = false) {
-    if (!country) return;
+  function select(countryOrArray) {
+    if (countryOrArray === null || countryOrArray === undefined) return;
 
-    if (multi) {
-      if (_selected.includes(country)) {
-        _selected = _selected.filter(c => c !== country);
-      } else {
-        _selected = [..._selected, country];
-      }
+    if (Array.isArray(countryOrArray)) {
+      _selected = countryOrArray;
     } else {
+      const country = countryOrArray;
       _selected = (_selected.length === 1 && _selected[0] === country)
-        ? []                
-        
+        ? []
         : [country];
     }
 
