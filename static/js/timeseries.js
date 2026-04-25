@@ -1,7 +1,7 @@
 const TimeSeriesChart = (() => {
   const margin = { top: 20, right: 20, bottom: 50, left: 65 };
-  const W = 500, H = 300;
-  const innerW = W - margin.left - margin.right;
+  const W = 650, H = 300;
+  const innerW = W - margin.left - margin.right - 140
   const innerH = H - margin.top - margin.bottom;
 
   const xScale = d3.scaleLinear().range([0, innerW]);
@@ -16,7 +16,7 @@ const TimeSeriesChart = (() => {
   const _tsColor = d3.scaleOrdinal();
 
   let _timeseries = null;
-  let _xAxisG, _yAxisG, _hintText, _lineGroup, _yearLine, _yLabel, _legend, _legendHint;
+  let _xAxisG, _yAxisG, _hintText, _lineGroup, _yearLine, _yLabel, _legend, _legendHint, _legendG;
 
   const _pointsByCountry = new Map();
 
@@ -38,9 +38,7 @@ const TimeSeriesChart = (() => {
     _lineGroup.selectAll('.ts-line')
       .classed('faded', d => country && d.country !== country)
       .classed('highlighted', d => d.country === country);
-    _legend.selectAll('.legend-item')
-      .classed('faded', d => country && d.country !== country)
-      .classed('highlighted', d => d.country === country);
+    
   }
 
   function showTip(event, country) {
@@ -63,8 +61,7 @@ const TimeSeriesChart = (() => {
 
   function clearPlot(hintMessage) {
     _lineGroup.selectAll('.ts-line').remove();
-    _legend.selectAll('.legend-item').remove();
-    _legendHint.selectAll('p').remove();
+    _legendG.selectAll('.legend-item').remove();
     _yearLine.attr('display', 'none');
     _hintText.style('display', null).text(hintMessage);
     _pointsByCountry.clear();
@@ -98,35 +95,42 @@ const TimeSeriesChart = (() => {
       .attr('d', d => lineGen(d.points));
   }
 
-  function updateLegend(series, multi) {
-    const data = multi ? series : [];
+function updateLegend(series) {
+  const items = _legendG.selectAll('.legend-item')
+    .data(series, d => d.country);
 
-    const items = _legend.selectAll('.legend-item')
-      .data(data, d => d.country);
+  items.exit().remove();
 
-    items.exit().remove();
+  const enter = items.enter()
+    .append('g')
+    .attr('class', 'legend-item')
+    .attr('transform', (d, i) => `translate(0, ${i * 20})`)
+    .style('cursor', 'pointer');
 
-    const enter = items.enter().append('div')
-      .attr('class', 'legend-item');
-    enter.append('div').attr('class', 'legend-swatch');
-    enter.append('span').attr('class', 'legend-label');
+  enter.append('rect')
+    .attr('width', 10)
+    .attr('height', 10)
+    .attr('y', -8);
 
-    const merged = enter.merge(items)
-      .on('mouseover', hoverHandlers.mouseover)
-      .on('mousemove', hoverHandlers.mousemove)
-      .on('mouseout', hoverHandlers.mouseout);
+  enter.append('text')
+    .attr('x', 16)
+    .attr('y', 0)
+    .attr('alignment-baseline', 'middle');
 
-    merged.select('.legend-swatch')
-      .style('background', d => _tsColor(d.country));
-    merged.select('.legend-label')
-      .text(d => d.country);
+  const merged = enter.merge(items)
+    .on('mouseover', hoverHandlers.mouseover)
+    .on('mousemove', hoverHandlers.mousemove)
+    .on('mouseout', hoverHandlers.mouseout);
 
-    // Hint only for >2 lines; at 1-2 the legend is self-explanatory.
-    const hintData = series.length > 2 ? ['Hover a legend entry to highlight its line'] : [];
-    _legendHint.selectAll('p').data(hintData)
-      .join('p')
-      .text(d => d);
-  }
+  merged.select('rect')
+    .attr('fill', d => _tsColor(d.country));
+
+  merged.select('text')
+    .text(d => d.country);
+
+  merged.transition()
+    .attr('transform', (d, i) => `translate(0, ${i * 20})`);
+}
 
   function updateYearLine(year) {
     if (year == null) { _yearLine.attr('display', 'none'); return; }
@@ -146,7 +150,10 @@ const TimeSeriesChart = (() => {
 
     _yLabel.text(indicator || '');
 
-    const countries = brushed.length ? brushed : (selected ? [selected] : []);
+    const countries =
+      brushed.length
+        ? brushed
+        : (selected && selected.length ? selected : []);
     if (!indicator || !countries.length) {
       clearPlot(!indicator
         ? 'Select an indicator from the map panel'
@@ -167,8 +174,11 @@ const TimeSeriesChart = (() => {
     _pointsByCountry.clear();
     for (const s of series) _pointsByCountry.set(s.country, s.points);
 
+
     d3.select('#ts-country').text(
-      series.length === 1 ? `: ${series[0].country}` : `— ${series.length} countries`
+      series.length === 1
+        ? `: ${series[0].country}`
+        : `— ${series.map(d => d.country).join(', ')}`
     );
 
     const allPoints = series.flatMap(s => s.points);
@@ -225,9 +235,10 @@ const TimeSeriesChart = (() => {
       .attr('class', 'ts-year-line')
       .attr('display', 'none');
 
-    _legendHint = d3.select('#ts-panel').insert('div', '#ts-legend')
-      .attr('class', 'ts-legend-hint');
-    _legend = d3.select('#ts-legend');
+    _legendG = g.append('g')
+  .attr('class', 'ts-legend')
+  .attr('transform', `translate(${innerW + 30}, 20)`);
+  
 
     State.on('change', update);
     State.on('brush', update);

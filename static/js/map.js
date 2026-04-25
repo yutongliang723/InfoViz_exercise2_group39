@@ -82,6 +82,11 @@ const MapChart = (() => {
     const svg = d3.select('#map-container')
       .append('svg')
       .attr('viewBox', `0 0 ${W} ${H}`);
+    svg.on('click', (event) => {
+      if (event.target.tagName === 'svg') {
+        State.select(null);
+      }
+    });
 
     const zoomLayer = svg.append('g').attr('class', 'zoom-layer');
 
@@ -95,7 +100,7 @@ const MapChart = (() => {
       .attr('class', 'country-overlay')
       .style('pointer-events', 'none');
     const hoverPath = overlay.append('path').attr('class', 'map-hover');
-    const selectedPath = overlay.append('path').attr('class', 'map-selected');
+    // const selectedPath = overlay.append('path').attr('class', 'map-selected');
 
     // Gradient built once; axis rescaled on domain change.
     const LEGEND_W = 320, LEGEND_H = 18;
@@ -196,9 +201,21 @@ const MapChart = (() => {
         hideTip();
       })
       .on('click', (event, d) => {
-        const name = d.properties.name_mapped;
-        if (name) State.select(name);
-      });
+          const name = d.properties.name_mapped;
+          if (!name) return;
+
+          const multi = event.ctrlKey || event.metaKey;
+          State.select(name, multi);
+        })
+      .on('click', (event, d) => {
+      event.stopPropagation(); 
+
+      const name = d.properties.name_mapped;
+      if (!name) return;
+
+      const multi = event.ctrlKey || event.metaKey;
+      State.select(name, multi);
+    });
 
     svg.on('mouseleave', hideTip);
 
@@ -206,11 +223,7 @@ const MapChart = (() => {
       const f = featureFor(hovered);
       hoverPath.attr('d', f ? pathGen(f) : null);
     });
-
-    State.on('change', ({ selected }) => {
-      const f = featureFor(selected);
-      selectedPath.attr('d', f ? pathGen(f) : null);
-    });
+    
 
     State.on('brush', ({ brushed }) => {
       const set = new Set(brushed);
@@ -222,7 +235,16 @@ const MapChart = (() => {
 
     State.on('indicator', refreshColors);
     State.on('year', refreshColors);
+    State.on('change', ({ selected }) => {
+        const selectedSet = new Set(selected || []);
 
+        paths
+          .classed('selected', d => selectedSet.has(d.properties.name_mapped))
+          .classed('dimmed', d => {
+            if (selectedSet.size === 0) return false;
+            return d.properties.name_mapped && !selectedSet.has(d.properties.name_mapped);
+          });
+      });
     const select = d3.select('#indicator-select');
     features.forEach(f => select.append('option').attr('value', f).text(f));
 

@@ -3,7 +3,8 @@
 //         'year' {year}, 'indicator' {indicator}
 // Setters always emit even when the value is unchanged.
 const State = (() => {
-  let _selected  = null;
+  // let _selected  = null;
+  let _selected  = [] // array to allow multiple selections
   let _brushed   = [];
   let _hovered   = null;
   let _year      = null;
@@ -15,10 +16,26 @@ const State = (() => {
     _listeners.filter(l => l.event === event).forEach(l => l.fn(data));
   }
 
-  function select(country) {
-    _selected = (_selected === country) ? null : country;   // toggle
+
+  function select(country, multi = false) {
+    if (!country) return;
+
+    if (multi) {
+      if (_selected.includes(country)) {
+        _selected = _selected.filter(c => c !== country);
+      } else {
+        _selected = [..._selected, country];
+      }
+    } else {
+      _selected = (_selected.length === 1 && _selected[0] === country)
+        ? []                
+        
+        : [country];
+    }
+
     emit('change', { selected: _selected });
   }
+
 
   function hover(country) {
     _hovered = country ?? null;

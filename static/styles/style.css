@@ -494,3 +494,11 @@ div.tooltip {
 .hidden {
   display: none;
 }
+.country.selected {
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.country.dimmed {
+  opacity: 0.3;
+}

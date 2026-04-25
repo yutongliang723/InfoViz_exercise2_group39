@@ -193,19 +193,17 @@ const PCAChart = (() => {
     }
 
     function updatePCAMessage() {
-        const selected = State.getSelected();
+      const selected = State.getSelected() || [];
+      const selectedSet = new Set(selected);
 
-        if (!selected) {
-          d3.select('#pca-message').classed('hidden', true);
-          return;
-        }
+      const exists = selectedSet.size === 0
+        ? true
+        : data.some(d => selectedSet.has(d.country));
 
-        const exists = data.some(d => d.country === selected);
-
-        d3.select('#pca-message')
-          .classed('hidden', exists)
-          .text('PCA data not available');
-      }
+      d3.select('#pca-message')
+        .classed('hidden', exists)
+        .text('PCA data not available');
+    }
 
     State.on('change', applyDotStyling);
     State.on('hover', applyDotStyling);
@@ -215,8 +213,24 @@ const PCAChart = (() => {
                               applyDotStyling();
                               updatePCAMessage();
                             });
+    State.on('change', ({ selected }) => {
+    const selectedSet = new Set(selected || []);
+
+    dots
+      .classed('selected', d => selectedSet.has(d.country))
+      .classed('dimmed', d => {
+        if (selectedSet.size === 0) return false;
+        return !selectedSet.has(d.country);
+      });
+
+    labels.attr('opacity', d => {
+      if (selectedSet.size === 0) return 1;
+      return selectedSet.has(d.country) ? 1 : 0.1;
+    });
+  });
 
     const legend = d3.select('#pca-legend');
+    
     legend.selectAll('.legend-item')
       .data(colorScale.domain())
       .join('div')
