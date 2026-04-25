@@ -134,24 +134,25 @@ const PCAChart = (() => {
     );
 
     function applyDotStyling() {
-      const brushedSet = new Set(State.getBrushed());
       const selected = State.getSelected();
+      const selectedSet = new Set(Array.isArray(selected) ? selected : (selected ? [selected] : []));
       const hovered = State.getHovered();
+      const brushedSet = new Set(State.getBrushed());
       const brushing = brushedSet.size > 0;
 
       dots
         .classed('hovered', d => d.country === hovered)
-        .classed('selected', d => d.country === selected)
+        .classed('selected', d => selectedSet.has(d.country))
         .classed('brushed', d => brushedSet.has(d.country))
         .classed('dimmed', d => {
           if (brushing) return !brushedSet.has(d.country);
-          if (selected) return d.country !== selected;
+          if (selectedSet.size) return !selectedSet.has(d.country);
           return false;
         });
 
       labels.attr('opacity', d => {
         if (brushing) return brushedSet.has(d.country) ? 1 : 0.1;
-        if (selected) return d.country === selected ? 1 : 0.1;
+        if (selectedSet.size) return selectedSet.has(d.country) ? 1 : 0.1;
         return 1;
       });
     }
