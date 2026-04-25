@@ -467,3 +467,30 @@ div.tooltip {
   cursor: pointer;
   max-width: 320px;
 }
+
+#ts-panel {
+  margin: 0 auto;
+  max-width: 800px; 
+}
+
+.ts-inner {
+  max-width: 800px;
+  margin: 0 auto;
+}
+#pca-panel {
+  position: relative;
+}
+
+#pca-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2rem;
+  color: #666;
+  pointer-events: none;
+}
+
+.hidden {
+  display: none;
+}

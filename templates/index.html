@@ -54,6 +54,7 @@
         </h2>
         <p class="hint">Hover or click a dot to highlight the country.</p>
         <div id="pca-container"></div>
+        <div id="pca-message" class="hidden">PCA data not available</div>
         <div id="pca-legend"></div>
       </section>
 
@@ -64,7 +65,9 @@
 
       <section class="panel" id="ts-panel">
         <h2>Time Series <span id="ts-country"></span></h2>
-        <div id="ts-container"></div>
+        <div id="ts-container">
+          <div class="ts-inner"></div>
+        </div>
         <div id="ts-legend"></div>
       </section>
 

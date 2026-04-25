@@ -192,10 +192,29 @@ const PCAChart = (() => {
         });
     }
 
+    function updatePCAMessage() {
+        const selected = State.getSelected();
+
+        if (!selected) {
+          d3.select('#pca-message').classed('hidden', true);
+          return;
+        }
+
+        const exists = data.some(d => d.country === selected);
+
+        d3.select('#pca-message')
+          .classed('hidden', exists)
+          .text('PCA data not available');
+      }
+
     State.on('change', applyDotStyling);
     State.on('hover', applyDotStyling);
     State.on('brush', applyDotStyling);
     State.on('indicator', applyRadius);
+    State.on('change', () => {
+                              applyDotStyling();
+                              updatePCAMessage();
+                            });
 
     const legend = d3.select('#pca-legend');
     legend.selectAll('.legend-item')
