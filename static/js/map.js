@@ -201,21 +201,22 @@ const MapChart = (() => {
         hideTip();
       })
       .on('click', (event, d) => {
+          event.stopPropagation();
           const name = d.properties.name_mapped;
           if (!name) return;
 
-          const multi = event.ctrlKey || event.metaKey;
-          State.select(name, multi);
-        })
-      .on('click', (event, d) => {
-      event.stopPropagation(); 
-
-      const name = d.properties.name_mapped;
-      if (!name) return;
-
-      const multi = event.ctrlKey || event.metaKey;
-      State.select(name, multi);
-    });
+          const current = State.getSelected();
+          if (event.ctrlKey || event.metaKey) {
+            // multi-select: toggle country in/out
+            const next = current.includes(name)
+              ? current.filter(c => c !== name)
+              : [...current, name];
+            State.select(next);
+          } else {
+            // single click: toggle or replace
+            State.select(name);
+          }
+        });
 
     svg.on('mouseleave', hideTip);
 
