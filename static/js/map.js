@@ -62,6 +62,52 @@ const MapChart = (() => {
     return out;
   }
 
+  function isFiniteNumber(v) {
+    const x = +v;
+    return v != null && !Number.isNaN(x) && Number.isFinite(x)
+  }
+
+  function buildCountryFeaturesExtents(timeseries, countries, features) {
+    const extents = {};
+    for (const country of countries) {
+      const ts = timeseries[country];
+      if (!ts) continue;
+
+      const byFeature = {};
+      for (const f of features) {
+        const arr = ts[f];
+        if (!Array.isArray(arr)) continue;
+
+        let min = Infinity, max = -Infinity, found = false;
+        for (const v of arr) {
+          if (!isFiniteNumber(v)) continue;
+          const x = +v;
+          found = true;
+          if (x < min) min = x;
+          if (x > max) max = x;
+        }
+        if (found) byFeature[f] = [min, max];
+      }
+
+      extents[country] = byFeature;
+    }
+    return extents;
+  }
+
+  function domainForIndicator(countryExtents, indicator, activeCountries) {
+    let min = Infinity, max = -Infinity, found = false;
+
+    for (const c of activeCountries) {
+      const e = countryExtents[c]?.[indicator];
+      if (!e) continue;
+      found = true;
+      if (e[0] < min) min = e[0];
+      if (e[1] > max) max = e[1];
+    }
+
+    return found ? [min, max] : null;
+  }
+
   async function render({ countries, timeseries, features, countryIds }) {
     const world = await d3.json(TOPO_URL);
     const countryFeatures = topojson.feature(world, world.objects.countries).features;
@@ -178,13 +224,31 @@ const MapChart = (() => {
       if (!indicator || year == null) { applyNeutral(); return; }
 
       const values = collectValues(timeseries, countries, indicator, year);
-      const ext = d3.extent(Object.values(values));
-      if (ext[0] != null) colorScale.domain(ext);
+      // const ext = d3.extent(Object.values(values));
+      // if (ext[0] != null) colorScale.domain(ext);
       applyColors(values, true);
-      updateLegend(ext, indicator);
+      // updateLegend(ext, indicator);
     }
 
     const detailFeatures = pickDetailFeatures(features);
+
+    const countryExtents = buildCountryFeaturesExtents(timeseries, countries, features);
+
+    function activeCountriesFromState() {
+      const sel = State.getSelected() || [];
+      return sel.length ? sel : countries;
+    }
+
+    function refreshDomainAndLegend() {
+      const indicator = State.getIndicator();
+      if (!indicator) { updateLegend(null, null); return; }
+
+      const domain = domainForIndicator(countryExtents, indicator, activeCountriesFromState());
+      if (!domain) { updateLegend(null, indicator); return; }
+
+      colorScale.domain(domain);
+      updateLegend(domain, indicator);
+    }
 
     paths
       .on('mouseover', (event, d) => {
@@ -234,8 +298,17 @@ const MapChart = (() => {
         .classed('dimmed', d => brushing && d.properties.name_mapped && !set.has(d.properties.name_mapped));
     });
 
-    State.on('indicator', refreshColors);
-    State.on('year', refreshColors);
+    // State.on('indicator', refreshColors);
+    State.on('indicator', () => {
+      refreshDomainAndLegend();
+      refreshColors();
+    })
+
+    // State.on('year', refreshColors);
+    State.on('year', () => {
+      refreshColors();
+    })
+
     State.on('change', ({ selected }) => {
         const selectedSet = new Set(selected || []);
 
@@ -245,6 +318,9 @@ const MapChart = (() => {
             if (selectedSet.size === 0) return false;
             return d.properties.name_mapped && !selectedSet.has(d.properties.name_mapped);
           });
+
+        refreshDomainAndLegend();
+        refreshColors();
       });
     const select = d3.select('#indicator-select');
     features.forEach(f => select.append('option').attr('value', f).text(f));
