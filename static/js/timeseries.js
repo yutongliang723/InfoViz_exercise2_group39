@@ -1,8 +1,8 @@
 const TimeSeriesChart = (() => {
-  const margin = { top: 20, right: 20, bottom: 50, left: 65 };
-  const W = 1000;
-  const H = 300;
-  const innerW = W - margin.left - margin.right - 140;
+  const margin = { top: 20, right: 10, bottom: 50, left: 85 };
+  const W = 900;
+  const H = 400;
+  const innerW = W - margin.left - margin.right - 100;
   const innerH = H - margin.top - margin.bottom;
 
   const xScale = d3.scaleLinear().range([0, innerW]);
@@ -117,7 +117,8 @@ const TimeSeriesChart = (() => {
     enter.append('text')
       .attr('x', 16)
       .attr('y', 0)
-      .attr('alignment-baseline', 'middle');
+      .attr('alignment-baseline', 'middle')
+      .style('font-size', '16px');
 
     const merged = enter.merge(items)
       .on('mouseover', hoverHandlers.mouseover)
@@ -195,7 +196,9 @@ const TimeSeriesChart = (() => {
       yScale.domain([Math.min(0, minV), maxV]).nice();
     }
     _xAxisG.call(d3.axisBottom(xScale).tickFormat(d3.format('d')).ticks(6));
+    _xAxisG.selectAll('text').style('font-size', '16px'); 
     _yAxisG.call(d3.axisLeft(yScale).ticks(5).tickFormat(fmtAxis));
+    _yAxisG.selectAll('text').style('font-size', '16px');
 
     const multi = series.length > 1;
     updateLines(series, multi);
@@ -218,24 +221,31 @@ const TimeSeriesChart = (() => {
     const svg = d3.select('#ts-container')
       .append('svg')
       .attr('viewBox', `0 0 ${W} ${H}`)
-      .attr('width', W);
+      // .attr('width', '100%');
+      // .attr('width', W)
+      .style('max-width', '100%')
 
     const g = svg.append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
     _xAxisG = g.append('g').attr('class', 'axis')
-      .attr('transform', `translate(0,${innerH})`);
-    _yAxisG = g.append('g').attr('class', 'axis');
+      .attr('transform', `translate(0,${innerH})`)
+      .style('font-size', '16px'); 
+    _yAxisG = g.append('g').attr('class', 'axis')
+      .style('font-size', '16px'); 
+    
 
     g.append('text').attr('class', 'axis-label')
       .attr('x', innerW / 2).attr('y', innerH + 42)
       .attr('text-anchor', 'middle')
+      .style('font-size', '18px')
       .text('Year');
 
     _yLabel = g.append('text').attr('class', 'axis-label')
       .attr('transform', 'rotate(-90)')
       .attr('x', -innerH / 2).attr('y', -58)
       .attr('text-anchor', 'middle')
+      .style('font-size', '18px')
       .text('');
 
     _hintText = g.append('text')
@@ -243,7 +253,8 @@ const TimeSeriesChart = (() => {
       .attr('x', innerW / 2).attr('y', innerH / 2)
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'middle')
-      .text('Brush on PCA or click a country');
+      .text('Brush on PCA or click a country')
+      .style('font-size', '18px');
 
     _lineGroup = g.append('g').attr('class', 'ts-lines');
 

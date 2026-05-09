@@ -60,14 +60,29 @@
       <select id="indicator-select"></select>
     </div>
     <!--  Time series  -->
-    <div class="row">
+  <div class="row" id="bottom-row">
 
       <section class="panel" id="ts-panel">
         <h2>Time Series <span id="ts-country"></span></h2>
         <div id="ts-container"></div>
       </section>
-
+      <section class="panel" id="manual-panel">
+        <h2>How to interact</h2>
+        <ul class="manual-list">
+          <li><b>Click</b> a country on the map or PCA to show its time series.</li>
+          <li><b>Ctrl + click</b> to select multiple countries or PCA dots.</li>
+          <li><b>Deselect</b> by clicking on the country or PCA dots.</li>
+          <li><b>Brush</b> in the PCA plot to select a group.</li>
+          <li><b>Hover</b> on the map, PCA dots, or lines to see details in a tooltip.</li>
+          <li><b>Scroll</b> to zoom the map; drag to pan; use home icon to reset the view.</li>
+          <li><b>Indicator dropdown</b> updates all three views simultaneously.</li>
+          <li><b>Year slider</b> changes the map and PCA in real time.</li>
+        </ul>
+      </section>
     </div>
+
+    
+
 
   </main>
 
