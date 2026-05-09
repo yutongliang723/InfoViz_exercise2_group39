@@ -39,7 +39,7 @@ def compute_pca(df):
     X_pca = pca.fit_transform(X_scaled)
 
     return {
-        'Year': int(most_recent_year),
+        'year': int(most_recent_year),
         'countries': countries,
         'pca_coords': X_pca.tolist(),
         'explained_variance': pca.explained_variance_ratio_.tolist(),
