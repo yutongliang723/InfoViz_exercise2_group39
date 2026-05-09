@@ -1,7 +1,8 @@
 const TimeSeriesChart = (() => {
   const margin = { top: 20, right: 20, bottom: 50, left: 65 };
-  const W = 650, H = 300;
-  const innerW = W - margin.left - margin.right - 140
+  const W = 1000;
+  const H = 300;
+  const innerW = W - margin.left - margin.right - 140;
   const innerH = H - margin.top - margin.bottom;
 
   const xScale = d3.scaleLinear().range([0, innerW]);
@@ -17,6 +18,7 @@ const TimeSeriesChart = (() => {
 
   let _timeseries = null;
   let _xAxisG, _yAxisG, _hintText, _lineGroup, _yearLine, _yLabel, _legend, _legendHint, _legendG;
+  let _globalYearDomain = null;
 
   const _pointsByCountry = new Map();
 
@@ -183,7 +185,10 @@ function updateLegend(series) {
 
     const allPoints = series.flatMap(s => s.points);
     const definedVals = allPoints.filter(p => p.value != null);
-    xScale.domain(d3.extent(allPoints, p => p.year));
+
+    if (_globalYearDomain) xScale.domain(_globalYearDomain);
+    // xScale.domain(d3.extent(allPoints, p => p.year));
+
     yScale.domain(d3.extent(definedVals, p => p.value)).nice();
     _xAxisG.call(d3.axisBottom(xScale).tickFormat(d3.format('d')).ticks(6));
     _yAxisG.call(d3.axisLeft(yScale).ticks(5).tickFormat(fmtAxis));
@@ -197,12 +202,19 @@ function updateLegend(series) {
   function render(timeseries) {
     _timeseries = timeseries;
 
+    const allYears = Object.values(timeseries).flatMap(ts => ts.years ?? []);
+    const [minYear, maxYear] = d3.extent(allYears);
+    _globalYearDomain = (minYear != null && maxYear != null)
+      ? [minYear - 1, maxYear + 1]
+      : null;
+
     const names = Object.keys(timeseries).sort();
     _tsColor.domain(names).range(d3.quantize(d3.interpolateRainbow, names.length));
 
     const svg = d3.select('#ts-container')
       .append('svg')
-      .attr('viewBox', `0 0 ${W} ${H}`);
+      .attr('viewBox', `0 0 ${W} ${H}`)
+      .attr('width', W);
 
     const g = svg.append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
@@ -238,7 +250,6 @@ function updateLegend(series) {
     _legendG = g.append('g')
   .attr('class', 'ts-legend')
   .attr('transform', `translate(${innerW + 30}, 20)`);
-  
 
     State.on('change', update);
     State.on('brush', update);
