@@ -210,7 +210,6 @@ const PCAChart = (() => {
         .text('PCA data not available');
     }
 
-    State.on('change', applyDotStyling);
     State.on('hover', applyDotStyling);
     State.on('brush', applyDotStyling);
     State.on('indicator', applyRadius);

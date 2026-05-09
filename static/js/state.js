@@ -3,10 +3,10 @@
 //         'year' {year}, 'indicator' {indicator}
 // Setters always emit even when the value is unchanged.
 const State = (() => {
-  let _selected  = [];
-  let _brushed   = [];
-  let _hovered   = null;
-  let _year      = null;
+  let _selected = [];
+  let _brushed = [];
+  let _hovered = null;
+  let _year = null;
   let _indicator = '';
   const _listeners = [];
 
@@ -17,9 +17,9 @@ const State = (() => {
 
 
   function select(countryOrArray) {
-    if (countryOrArray === null || countryOrArray === undefined) return;
-
-    if (Array.isArray(countryOrArray)) {
+    if (countryOrArray == null) {
+      _selected = [];
+    } else if (Array.isArray(countryOrArray)) {
       _selected = countryOrArray;
     } else {
       const country = countryOrArray;
@@ -54,10 +54,10 @@ const State = (() => {
 
   return {
     on, select, hover, setBrushed, setYear, setIndicator,
-    getSelected:  () => _selected,
-    getBrushed:   () => _brushed,
-    getHovered:   () => _hovered,
-    getYear:      () => _year,
+    getSelected: () => _selected,
+    getBrushed: () => _brushed,
+    getHovered: () => _hovered,
+    getYear: () => _year,
     getIndicator: () => _indicator,
   };
 })();

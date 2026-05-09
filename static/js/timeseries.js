@@ -188,13 +188,18 @@ const TimeSeriesChart = (() => {
 
     if (_globalYearDomain) xScale.domain(_globalYearDomain);
 
-    yScale.domain(d3.extent(definedVals, p => p.value)).nice();
+    if (indicator.includes('%')) {
+      yScale.domain([0, 100]);
+    } else {
+      const [minV, maxV] = d3.extent(definedVals, p => p.value);
+      yScale.domain([Math.min(0, minV), maxV]).nice();
+    }
     _xAxisG.call(d3.axisBottom(xScale).tickFormat(d3.format('d')).ticks(6));
     _yAxisG.call(d3.axisLeft(yScale).ticks(5).tickFormat(fmtAxis));
 
     const multi = series.length > 1;
     updateLines(series, multi);
-    updateLegend(series, multi);
+    updateLegend(series);
     updateYearLine(year);
   }
 
