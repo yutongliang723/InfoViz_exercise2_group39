@@ -20,11 +20,6 @@ const PCAChart = (() => {
   }
   function hideTip() { tooltip.classed('hidden', true); }
 
-  // Drop anything after the first comma: "Egypt, Arab Rep." -> "Egypt"
-  function shortLabel(name) {
-    return name.split(',')[0];
-  }
-
   const BASE_RADIUS = 3;
   const radiusScale = d3.scaleSqrt().range([2.5, 8]);
 
@@ -114,7 +109,6 @@ const PCAChart = (() => {
           .style('top', (event.clientY - 10) + 'px');
       })
       .on('mouseout', () => { hideTip(); State.hover(null); })
-      // .on('click', (event, d) => State.select(d.country));
       .on('click', (event, d) => {
         const current = State.getSelected();
         const currentArr = Array.isArray(current) ? current : (current ? [current] : []);
@@ -203,30 +197,30 @@ const PCAChart = (() => {
     }
 
     function updatePCAMessage() {
-    const selected = State.getSelected();
-    const selectedArr = Array.isArray(selected) ? selected : (selected ? [selected] : []);
-    const selectedSet = new Set(selectedArr);
+      const selected = State.getSelected();
+      const selectedArr = Array.isArray(selected) ? selected : (selected ? [selected] : []);
+      const selectedSet = new Set(selectedArr);
 
-    const exists = selectedSet.size === 0
-      ? true
-      : data.some(d => selectedSet.has(d.country));
+      const exists = selectedSet.size === 0
+        ? true
+        : data.some(d => selectedSet.has(d.country));
 
-    d3.select('#pca-message')
-      .classed('hidden', exists)
-      .text('PCA data not available');
-  }
+      d3.select('#pca-message')
+        .classed('hidden', exists)
+        .text('PCA data not available');
+    }
 
     State.on('change', applyDotStyling);
     State.on('hover', applyDotStyling);
     State.on('brush', applyDotStyling);
     State.on('indicator', applyRadius);
     State.on('change', () => {
-                                applyDotStyling();
-                                updatePCAMessage();
-                              });
+      applyDotStyling();
+      updatePCAMessage();
+    });
 
     const legend = d3.select('#pca-legend');
-    
+
     legend.selectAll('.legend-item')
       .data(colorScale.domain())
       .join('div')

@@ -3,8 +3,7 @@
 //         'year' {year}, 'indicator' {indicator}
 // Setters always emit even when the value is unchanged.
 const State = (() => {
-  // let _selected  = null;
-  let _selected  = [] // array to allow multiple selections
+  let _selected  = [];
   let _brushed   = [];
   let _hovered   = null;
   let _year      = null;

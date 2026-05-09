@@ -91,34 +91,6 @@ div.tooltip {
   line-height: 1.4;
 }
 
-.features-used {
-  display: flex;
-  align-items: baseline;
-  gap: .5rem;
-  font-size: 0.68rem;
-  line-height: 1.4;
-  color: #555;
-  background: #fafafa;
-  border-left: 2px solid #cfd5dc;
-  padding: .4rem .6rem;
-  border-radius: 0 3px 3px 0;
-  margin: 0 0 .7rem 0;
-}
-
-.features-label {
-  flex-shrink: 0;
-  font-weight: 600;
-  font-size: 0.62rem;
-  color: #2c6aa0;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.features-list {
-  color: #444;
-  word-break: break-word;
-}
-
 .axis path {
   fill: none;
   stroke: #262b28;
@@ -284,14 +256,12 @@ div.tooltip {
 
 /* Keep strokes at a constant pixel width while the zoom layer is transformed. */
 .country,
-.map-hover,
-.map-selected {
+.map-hover {
   vector-effect: non-scaling-stroke;
 }
 
 /* Highlight overlay drawn above all country fills so borders are fully visible. */
-.map-hover,
-.map-selected {
+.map-hover {
   fill: none;
   pointer-events: none;
   stroke-linejoin: round;
@@ -300,11 +270,6 @@ div.tooltip {
 .map-hover {
   stroke: #333;
   stroke-width: 1.2;
-}
-
-.map-selected {
-  stroke: var(--highlight);
-  stroke-width: 1.8;
 }
 
 #map-container svg {
@@ -374,35 +339,6 @@ div.tooltip {
   opacity: 1;
 }
 
-.ts-legend-hint p {
-  margin: .4rem 0 0 0;
-  font-size: 0.7rem;
-  color: #777;
-  font-style: italic;
-}
-
-#ts-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .25rem .7rem;
-  margin-top: .5rem;
-  max-height: 5.5rem;
-  overflow-y: auto;
-}
-
-#ts-legend .legend-item {
-  cursor: pointer;
-  transition: opacity 150ms;
-}
-
-#ts-legend .legend-item.faded {
-  opacity: 0.3;
-}
-
-#ts-legend .legend-item.highlighted {
-  font-weight: 700;
-}
-
 .ts-hint {
   fill: #aaa;
   font-size: 8px;
@@ -470,13 +406,9 @@ div.tooltip {
 
 #ts-panel {
   margin: 0 auto;
-  max-width: 800px; 
+  max-width: 800px;
 }
 
-.ts-inner {
-  max-width: 800px;
-  margin: 0 auto;
-}
 #pca-panel {
   position: relative;
 }
@@ -494,11 +426,8 @@ div.tooltip {
 .hidden {
   display: none;
 }
+
 .country.selected {
   stroke: #000;
   stroke-width: 1.5px;
-}
-
-.country.dimmed {
-  opacity: 0.3;
 }

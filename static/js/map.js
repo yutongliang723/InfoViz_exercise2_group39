@@ -146,7 +146,6 @@ const MapChart = (() => {
       .attr('class', 'country-overlay')
       .style('pointer-events', 'none');
     const hoverPath = overlay.append('path').attr('class', 'map-hover');
-    // const selectedPath = overlay.append('path').attr('class', 'map-selected');
 
     // Gradient built once; axis rescaled on domain change.
     const LEGEND_W = 320, LEGEND_H = 18;
@@ -224,10 +223,7 @@ const MapChart = (() => {
       if (!indicator || year == null) { applyNeutral(); return; }
 
       const values = collectValues(timeseries, countries, indicator, year);
-      // const ext = d3.extent(Object.values(values));
-      // if (ext[0] != null) colorScale.domain(ext);
       applyColors(values, true);
-      // updateLegend(ext, indicator);
     }
 
     const detailFeatures = pickDetailFeatures(features);
@@ -265,22 +261,20 @@ const MapChart = (() => {
         hideTip();
       })
       .on('click', (event, d) => {
-          event.stopPropagation();
-          const name = d.properties.name_mapped;
-          if (!name) return;
+        event.stopPropagation();
+        const name = d.properties.name_mapped;
+        if (!name) return;
 
-          const current = State.getSelected();
-          if (event.ctrlKey || event.metaKey) {
-            // multi-select: toggle country in/out
-            const next = current.includes(name)
-              ? current.filter(c => c !== name)
-              : [...current, name];
-            State.select(next);
-          } else {
-            // single click: toggle or replace
-            State.select(name);
-          }
-        });
+        const current = State.getSelected();
+        if (event.ctrlKey || event.metaKey) {
+          const next = current.includes(name)
+            ? current.filter(c => c !== name)
+            : [...current, name];
+          State.select(next);
+        } else {
+          State.select(name);
+        }
+      });
 
     svg.on('mouseleave', hideTip);
 
@@ -288,7 +282,7 @@ const MapChart = (() => {
       const f = featureFor(hovered);
       hoverPath.attr('d', f ? pathGen(f) : null);
     });
-    
+
 
     State.on('brush', ({ brushed }) => {
       const set = new Set(brushed);
@@ -298,30 +292,28 @@ const MapChart = (() => {
         .classed('dimmed', d => brushing && d.properties.name_mapped && !set.has(d.properties.name_mapped));
     });
 
-    // State.on('indicator', refreshColors);
     State.on('indicator', () => {
       refreshDomainAndLegend();
       refreshColors();
     })
 
-    // State.on('year', refreshColors);
     State.on('year', () => {
       refreshColors();
     })
 
     State.on('change', ({ selected }) => {
-        const selectedSet = new Set(selected || []);
+      const selectedSet = new Set(selected || []);
 
-        paths
-          .classed('selected', d => selectedSet.has(d.properties.name_mapped))
-          .classed('dimmed', d => {
-            if (selectedSet.size === 0) return false;
-            return d.properties.name_mapped && !selectedSet.has(d.properties.name_mapped);
-          });
+      paths
+        .classed('selected', d => selectedSet.has(d.properties.name_mapped))
+        .classed('dimmed', d => {
+          if (selectedSet.size === 0) return false;
+          return d.properties.name_mapped && !selectedSet.has(d.properties.name_mapped);
+        });
 
-        refreshDomainAndLegend();
-        refreshColors();
-      });
+      refreshDomainAndLegend();
+      refreshColors();
+    });
     const select = d3.select('#indicator-select');
     features.forEach(f => select.append('option').attr('value', f).text(f));
 

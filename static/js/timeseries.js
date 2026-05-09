@@ -17,7 +17,7 @@ const TimeSeriesChart = (() => {
   const _tsColor = d3.scaleOrdinal();
 
   let _timeseries = null;
-  let _xAxisG, _yAxisG, _hintText, _lineGroup, _yearLine, _yLabel, _legend, _legendHint, _legendG;
+  let _xAxisG, _yAxisG, _hintText, _lineGroup, _yearLine, _yLabel, _legendG;
   let _globalYearDomain = null;
 
   const _pointsByCountry = new Map();
@@ -40,7 +40,7 @@ const TimeSeriesChart = (() => {
     _lineGroup.selectAll('.ts-line')
       .classed('faded', d => country && d.country !== country)
       .classed('highlighted', d => d.country === country);
-    
+
   }
 
   function showTip(event, country) {
@@ -97,42 +97,42 @@ const TimeSeriesChart = (() => {
       .attr('d', d => lineGen(d.points));
   }
 
-function updateLegend(series) {
-  const items = _legendG.selectAll('.legend-item')
-    .data(series, d => d.country);
+  function updateLegend(series) {
+    const items = _legendG.selectAll('.legend-item')
+      .data(series, d => d.country);
 
-  items.exit().remove();
+    items.exit().remove();
 
-  const enter = items.enter()
-    .append('g')
-    .attr('class', 'legend-item')
-    .attr('transform', (d, i) => `translate(0, ${i * 20})`)
-    .style('cursor', 'pointer');
+    const enter = items.enter()
+      .append('g')
+      .attr('class', 'legend-item')
+      .attr('transform', (d, i) => `translate(0, ${i * 20})`)
+      .style('cursor', 'pointer');
 
-  enter.append('rect')
-    .attr('width', 10)
-    .attr('height', 10)
-    .attr('y', -8);
+    enter.append('rect')
+      .attr('width', 10)
+      .attr('height', 10)
+      .attr('y', -8);
 
-  enter.append('text')
-    .attr('x', 16)
-    .attr('y', 0)
-    .attr('alignment-baseline', 'middle');
+    enter.append('text')
+      .attr('x', 16)
+      .attr('y', 0)
+      .attr('alignment-baseline', 'middle');
 
-  const merged = enter.merge(items)
-    .on('mouseover', hoverHandlers.mouseover)
-    .on('mousemove', hoverHandlers.mousemove)
-    .on('mouseout', hoverHandlers.mouseout);
+    const merged = enter.merge(items)
+      .on('mouseover', hoverHandlers.mouseover)
+      .on('mousemove', hoverHandlers.mousemove)
+      .on('mouseout', hoverHandlers.mouseout);
 
-  merged.select('rect')
-    .attr('fill', d => _tsColor(d.country));
+    merged.select('rect')
+      .attr('fill', d => _tsColor(d.country));
 
-  merged.select('text')
-    .text(d => d.country);
+    merged.select('text')
+      .text(d => d.country);
 
-  merged.transition()
-    .attr('transform', (d, i) => `translate(0, ${i * 20})`);
-}
+    merged.transition()
+      .attr('transform', (d, i) => `translate(0, ${i * 20})`);
+  }
 
   function updateYearLine(year) {
     if (year == null) { _yearLine.attr('display', 'none'); return; }
@@ -187,7 +187,6 @@ function updateLegend(series) {
     const definedVals = allPoints.filter(p => p.value != null);
 
     if (_globalYearDomain) xScale.domain(_globalYearDomain);
-    // xScale.domain(d3.extent(allPoints, p => p.year));
 
     yScale.domain(d3.extent(definedVals, p => p.value)).nice();
     _xAxisG.call(d3.axisBottom(xScale).tickFormat(d3.format('d')).ticks(6));
@@ -248,8 +247,8 @@ function updateLegend(series) {
       .attr('display', 'none');
 
     _legendG = g.append('g')
-  .attr('class', 'ts-legend')
-  .attr('transform', `translate(${innerW + 30}, 20)`);
+      .attr('class', 'ts-legend')
+      .attr('transform', `translate(${innerW + 30}, 20)`);
 
     State.on('change', update);
     State.on('brush', update);
