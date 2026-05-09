@@ -189,12 +189,10 @@ const TimeSeriesChart = (() => {
 
     if (_globalYearDomain) xScale.domain(_globalYearDomain);
 
-    if (indicator.includes('%')) {
-      yScale.domain([0, 100]);
-    } else {
-      const [minV, maxV] = d3.extent(definedVals, p => p.value);
-      yScale.domain([Math.min(0, minV), maxV]).nice();
-    }
+    const [minV, maxV] = d3.extent(definedVals, p => p.value);
+    const range = maxV - minV || 1;
+    const pad = range * 0.1;
+    yScale.domain([minV - pad, maxV + pad]).nice();
     _xAxisG.call(d3.axisBottom(xScale).tickFormat(d3.format('d')).ticks(6));
     _xAxisG.selectAll('text').style('font-size', '16px'); 
     _yAxisG.call(d3.axisLeft(yScale).ticks(5).tickFormat(fmtAxis));
