@@ -129,9 +129,9 @@ const MapChart = (() => {
       .append('svg')
       .attr('viewBox', `0 0 ${W} ${H}`);
     svg.on('click', (event) => {
-      if (event.target.tagName === 'svg') {
-        State.select(null);
-      }
+
+      event.stopPropagation();
+
     });
 
     const zoomLayer = svg.append('g').attr('class', 'zoom-layer');
@@ -272,7 +272,13 @@ const MapChart = (() => {
             : [...current, name];
           State.select(next);
         } else {
-          State.select(name);
+
+          const currentArr = Array.isArray(current) ? current : [current];
+
+          const already = currentArr.includes(name);
+
+          State.select(already ? [] : [name]);
+
         }
       });
 
@@ -284,13 +290,34 @@ const MapChart = (() => {
     });
 
 
-    State.on('brush', ({ brushed }) => {
-      const set = new Set(brushed);
-      const brushing = set.size > 0;
-      paths
-        .classed('brushed', d => brushing && set.has(d.properties.name_mapped))
-        .classed('dimmed', d => brushing && d.properties.name_mapped && !set.has(d.properties.name_mapped));
-    });
+    function applyMapStyling() {
+    const selectedSet = new Set(State.getSelected() || []);
+    const brushedSet = new Set(State.getBrushed() || []);
+
+    const hasSelected = selectedSet.size > 0;
+    const hasBrushed = brushedSet.size > 0;
+
+    paths
+      .classed('selected', d => selectedSet.has(d.properties.name_mapped))
+      .classed('brushed', d => brushedSet.has(d.properties.name_mapped))
+      .classed('dimmed', d => {
+        const name = d.properties.name_mapped;
+
+        // selected takes priority
+        if (hasSelected) {
+          return name && !selectedSet.has(name);
+        }
+
+        if (hasBrushed) {
+          return name && !brushedSet.has(name);
+        }
+
+        return false;
+      });
+  }
+
+  State.on('change', applyMapStyling);
+  State.on('brush', applyMapStyling);
 
     State.on('indicator', () => {
       refreshDomainAndLegend();
@@ -300,20 +327,11 @@ const MapChart = (() => {
     State.on('year', () => {
       refreshColors();
     })
-
-    State.on('change', ({ selected }) => {
-      const selectedSet = new Set(selected || []);
-
-      paths
-        .classed('selected', d => selectedSet.has(d.properties.name_mapped))
-        .classed('dimmed', d => {
-          if (selectedSet.size === 0) return false;
-          return d.properties.name_mapped && !selectedSet.has(d.properties.name_mapped);
-        });
-
-      refreshDomainAndLegend();
-      refreshColors();
-    });
+    State.on('change', () => {
+    applyMapStyling();
+    refreshDomainAndLegend();
+    refreshColors();
+  });
     const select = d3.select('#indicator-select');
     features.forEach(f => select.append('option').attr('value', f).text(f));
 

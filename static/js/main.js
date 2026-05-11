@@ -37,4 +37,10 @@
     State.setIndicator(event.target.value);
   });
 
+  d3.select('#clear-selection-btn').on('click', () => {
+    State.select([]);
+    State.setBrushed([]);
+    State.hover(null);
+  });
+
 })();

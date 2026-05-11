@@ -51,6 +51,13 @@ const PCAChart = (() => {
       .on('mouseleave', hideTip)
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
+    svg.on('click', (event) => {
+        // only clear if empty background clicked
+        if (event.target.tagName === 'svg' || event.target.classList.contains('brush')) {
+          State.select([]);
+          State.setBrushed([]);
+        }
+      });
 
     // grid behind dots, labels suppressed (real axes handle ticks)
     svg.append('g').attr('class', 'grid')
@@ -113,15 +120,27 @@ const PCAChart = (() => {
       })
       .on('mouseout', () => { hideTip(); State.hover(null); })
       .on('click', (event, d) => {
-        // every click toggles, no modifier needed
-        const current = State.getSelected();
-        const currentArr = Array.isArray(current) ? current : (current ? [current] : []);
-        const already = currentArr.includes(d.country);
-        const next = already
-          ? currentArr.filter(c => c !== d.country)
-          : [...currentArr, d.country];
-        State.select(next);
-      });
+      event.stopPropagation();
+
+      const current = State.getSelected() || [];
+      const currentArr = Array.isArray(current) ? current : [current];
+
+      const already = currentArr.includes(d.country);
+      const multi = event.ctrlKey || event.metaKey;
+
+      // normal click
+      if (!multi) {
+        State.select(already ? [] : [d.country]);
+        return;
+      }
+
+      // ctrl/cmd multi-select toggle
+      const next = already
+        ? currentArr.filter(c => c !== d.country)
+        : [...currentArr, d.country];
+
+      State.select(next);
+    });
 
     function handleBrush(event) {
       if (!event.selection) { State.setBrushed([]); return; }
@@ -215,13 +234,14 @@ const PCAChart = (() => {
     }
 
     State.on('change', applyDotStyling);
-    State.on('hover', applyDotStyling);
-    State.on('brush', applyDotStyling);
-    State.on('indicator', applyRadius);
     State.on('change', () => {
       applyDotStyling();
       updatePCAMessage();
     });
+    State.on('hover', applyDotStyling);
+    State.on('brush', applyDotStyling);
+    State.on('indicator', applyRadius);
+
 
     const legend = d3.select('#pca-legend');
 
