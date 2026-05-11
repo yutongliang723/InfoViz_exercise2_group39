@@ -4,7 +4,6 @@ const MapChart = (() => {
 
   const DETAIL_COUNT = 8;
 
-  // even sample, not just the first N alphabetically
   function pickDetailFeatures(features) {
     if (features.length <= DETAIL_COUNT) return features;
     const step = features.length / DETAIL_COUNT;
@@ -25,7 +24,6 @@ const MapChart = (() => {
       .style('top', (event.clientY - 10) + 'px');
   }
   function hideTip() { tooltip.classed('hidden', true); }
-
   function buildTooltipHtml(name, ts, detailFeatures) {
     if (!ts || !ts.years) return `<strong>${name}</strong><div class="muted">No data</div>`;
 

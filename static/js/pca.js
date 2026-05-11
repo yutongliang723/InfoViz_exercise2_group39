@@ -59,7 +59,7 @@ const PCAChart = (() => {
         }
       });
 
-    // grid behind dots, labels suppressed (real axes handle ticks)
+    // grid behind dots, labels suppressed
     svg.append('g').attr('class', 'grid')
       .attr('transform', `translate(0,${innerH})`)
       .call(d3.axisBottom(xScale).tickSize(-innerH).tickFormat(''));

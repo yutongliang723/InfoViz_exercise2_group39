@@ -1,5 +1,6 @@
 (async function main() {
 
+  // get data as json blob
   const serverData = JSON.parse(document.getElementById('server-data').textContent);
   const COUNTRIES       = serverData.countries;
   const PCA_DATA        = serverData.pca_data;
@@ -14,7 +15,8 @@
   State.setYear(+slider.value);
   yearLabel.textContent = slider.value;
 
-  // map is async (fetches topojson)
+  
+  // render the charts. 
   PCAChart.render(PCA_DATA, TIMESERIES, COUNTRY_REGIONS);
   await MapChart.render({
     countries:  COUNTRIES,
@@ -28,6 +30,7 @@
   indicatorSelect.value = FEATURES[0];
   State.setIndicator(FEATURES[0]);
 
+  // year slider
   slider.addEventListener('input', (e) => {
     yearLabel.textContent = e.target.value;
     State.setYear(+e.target.value);

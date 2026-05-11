@@ -19,7 +19,6 @@
   </header>
 
   <main>
-    <!--  Map + PCA side-by-side  -->
     <div class="row">
 
       <section class="panel" id="map-panel">
@@ -54,7 +53,7 @@
 
     </div>
 
-    <!--  Global controls — indicator drives all three views  -->
+    <!-- indicator drives all three views -->
     <div class="controls">
       <label for="indicator-select">Indicator:</label>
       <select id="indicator-select"></select>
@@ -85,16 +84,12 @@
         </ul>
       </section>
     </div>
-
-    
-
-
   </main>
 
-  <!--  Tooltip  -->
+  <!--  tooltip  -->
   <div id="tooltip" class="tooltip hidden"></div>
 
-  <!--  Inject server data via Jinja2  -->
+  <!--  inject server data via Jinja2  -->
   <script id="server-data" type="application/json">
   {{ {
     "countries": countries,
@@ -106,7 +101,7 @@
   } | tojson }}
 </script>
 
-  <!--  Application modules  -->
+  <!-- Application modules -->
   <script src="{{ url_for('static', filename='js/state.js') }}"></script>
   <script src="{{ url_for('static', filename='js/pca.js') }}"></script>
   <script src="{{ url_for('static', filename='js/map.js') }}"></script>

@@ -2,8 +2,7 @@
   --highlight: #f0c040;
 }
 
-
-/* ─── base ─────────────────────────────────────────────── */
+/* base */
 
 body {
   font-family: Calibri, Arial, Helvetica, sans-serif;
@@ -18,8 +17,7 @@ header {
   padding: 0 2rem;
 }
 
-
-/* ─── layout ────────────────────────────────────────────── */
+/* layout */
 
 .row {
   display: flex;
@@ -72,7 +70,7 @@ header {
 }
 
 
-/* ─── controls ──────────────────────────────────────────── */
+/* controls */
 
 .controls {
   display: flex;
@@ -127,7 +125,7 @@ header {
 }
 
 
-/* ─── small text / badges ───────────────────────────────── */
+/* small text / badges */
 
 .year-badge {
   display: inline-block;
@@ -150,7 +148,7 @@ header {
 }
 
 
-/* ─── tooltip ───────────────────────────────────────────── */
+/* tooltip */
 
 div.tooltip {
   position: fixed;
@@ -204,8 +202,7 @@ div.tooltip {
 }
 
 
-/* ─── axes / grid ───────────────────────────────────────── */
-
+/* axes / grid */
 .axis path {
   fill: none;
   stroke: #262b28;
@@ -240,7 +237,7 @@ div.tooltip {
 }
 
 
-/* ─── map ───────────────────────────────────────────────── */
+/* map */
 
 #map-container {
   position: relative;
@@ -343,7 +340,7 @@ div.tooltip {
 }
 
 
-/* ─── pca ───────────────────────────────────────────────── */
+/* pca */
 
 #pca-message {
   position: absolute;
@@ -409,7 +406,7 @@ div.tooltip {
 }
 
 
-/* ─── time series ───────────────────────────────────────── */
+/* time series */
 
 .ts-line {
   fill: none;
@@ -443,7 +440,7 @@ div.tooltip {
 }
 
 
-/* ─── utility ───────────────────────────────────────────── */
+/* other */
 
 .hidden {
   display: none;
