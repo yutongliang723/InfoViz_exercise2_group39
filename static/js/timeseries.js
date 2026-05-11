@@ -2,7 +2,8 @@ const TimeSeriesChart = (() => {
   const margin = { top: 20, right: 10, bottom: 50, left: 85 };
   const W = 900;
   const H = 400;
-  const innerW = W - margin.left - margin.right - 100;
+  const LEGEND_COL_W = 220;
+  const innerW = W - margin.left - margin.right - LEGEND_COL_W;
   const innerH = H - margin.top - margin.bottom;
 
   const xScale = d3.scaleLinear().range([0, innerW]);
@@ -13,7 +14,7 @@ const TimeSeriesChart = (() => {
     .x(d => xScale(d.year))
     .y(d => yScale(d.value));
 
-  // Per-country colors independent of region; rainbow gives distinct hues for any subset.
+  // rainbow gives distinct hues per country regardless of subset size
   const _tsColor = d3.scaleOrdinal();
 
   let _timeseries = null;
@@ -189,6 +190,7 @@ const TimeSeriesChart = (() => {
 
     if (_globalYearDomain) xScale.domain(_globalYearDomain);
 
+    // 10% padding so lines don't touch the chart edges (would exaggerate dips)
     const [minV, maxV] = d3.extent(definedVals, p => p.value);
     const range = maxV - minV || 1;
     const pad = range * 0.1;
@@ -219,8 +221,6 @@ const TimeSeriesChart = (() => {
     const svg = d3.select('#ts-container')
       .append('svg')
       .attr('viewBox', `0 0 ${W} ${H}`)
-      // .attr('width', '100%');
-      // .attr('width', W)
       .style('max-width', '100%')
 
     const g = svg.append('g')

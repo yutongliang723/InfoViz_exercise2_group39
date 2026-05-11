@@ -13,7 +13,7 @@ def load_regions():
         return json.load(f)
 
 
-# load once at startup; used for both COUNTRIES and the per-request region map.
+# load once at startup
 _REGIONS = load_regions()
 COUNTRIES = list(_REGIONS.keys())
 
@@ -27,13 +27,13 @@ def load_and_filter_data():
 def compute_pca(df):
     most_recent_year = df['Year'].max()
     df_recent = df[df['Year'] == most_recent_year].copy()
-    # exclude 'year': it's constant in this subset and not a meaningful feature.
+    # Year is constant in this subset, drop it from the feature set
     feature_cols = [c for c in df_recent.select_dtypes(include=[np.number]).columns if c != 'Year']
     df_recent = df_recent.dropna(subset=feature_cols)
 
     X = df_recent[feature_cols].values
     countries = df_recent['Name'].tolist()
-    # scale before pca, otherwise features with large ranges dominate
+    # scale before PCA so high-range features don't dominate
     X_scaled = StandardScaler().fit_transform(X)
 
     pca = PCA(n_components=2)
@@ -49,7 +49,7 @@ def compute_pca(df):
 
 
 def build_country_ids(df):
-    # maps country name to padded ISO numeric string ("008") matching world-atlas topology IDs.
+    # world-atlas topojson keys countries by padded numeric ISO (e.g. "008"), not name
     with open('static/data/iso_numeric.json') as f:
         iso_alpha3_to_numeric = json.load(f)
     name_to_code = df[['Name', 'Code']].drop_duplicates().set_index('Name')['Code'].to_dict()
@@ -61,7 +61,7 @@ def index():
     df = load_and_filter_data()
     pca_data = compute_pca(df)
 
-    # exclude identifier columns so the indicator dropdown only shows numeric features.
+    # only numeric indicator columns end up in the dropdown
     feature_cols = [c for c in df.columns if c not in ['Name', 'Code', 'Year']]
     timeseries = {}
     for country in COUNTRIES:

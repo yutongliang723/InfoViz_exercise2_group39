@@ -4,7 +4,7 @@ const MapChart = (() => {
 
   const DETAIL_COUNT = 8;
 
-  // Sample features evenly across the list rather than just the alphabetic prefix.
+  // even sample, not just the first N alphabetically
   function pickDetailFeatures(features) {
     if (features.length <= DETAIL_COUNT) return features;
     const step = features.length / DETAIL_COUNT;
@@ -147,7 +147,7 @@ const MapChart = (() => {
       .style('pointer-events', 'none');
     const hoverPath = overlay.append('path').attr('class', 'map-hover');
 
-    // Gradient built once; axis rescaled on domain change.
+    // gradient built once, axis rescales on domain change
     const LEGEND_W = 320, LEGEND_H = 18;
     const LEGEND_TOP = 26, LEGEND_BOTTOM = 24;
     const legendSvg = d3.select('#map-legend').append('svg')

@@ -1,7 +1,6 @@
-// Shared state singleton for coordinated views.
-// Events: 'change' {selected}, 'brush' {brushed}, 'hover' {hovered},
-//         'year' {year}, 'indicator' {indicator}
-// Setters always emit even when the value is unchanged.
+// Shared state for coordinated views.
+// Events: change, brush, hover, year, indicator.
+// Setters always emit (views rely on this for first-paint sync).
 const State = (() => {
   let _selected = [];
   let _brushed = [];

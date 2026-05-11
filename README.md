@@ -1,22 +1,22 @@
-# Information Visualization — Exercise 2 (Group 39)
+# Information Visualization - Exercise 2 (Group 39)
 
-A Flask web application for interactive data visualization, featuring PCA analysis and time-series exploration across world development indicators.
+Flask web app with coordinated views (PCA scatterplot, choropleth map, time series) over world development indicators.
 
 ## Prerequisites
 
-- **Python 3.13+**
+- Python 3.13+
 
 ## Quick Start
 
 ### Option A: Using `uv`
 
-[`uv`](https://docs.astral.sh/uv/) handles everything — it will automatically download the right Python version and install dependencies.
+[`uv`](https://docs.astral.sh/uv/) will download Python 3.13 and install the dependencies for you.
 
 ```bash
 # Install uv (if you don't have it)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Run the app (first run installs everything automatically)
+# Run the app
 uv run python app.py
 ```
 

@@ -1,13 +1,10 @@
 const PCAChart = (() => {
 
-  // chart dimensions. innerW/innerH are the actual plot area after margins.
   const margin = { top: 20, right: 20, bottom: 55, left: 60 };
   const W = 400, H = 300;
   const innerW = W - margin.left - margin.right;
   const innerH = H - margin.top - margin.bottom;
 
-  // tableau10 is a good default for categorical color — up to 10 distinct regions,
-  // reasonably colourblind-friendly.
   let _regionMap = {};
   const colorScale = d3.scaleOrdinal().range(d3.schemeTableau10);
 
@@ -15,8 +12,6 @@ const PCAChart = (() => {
 
   const tooltip = d3.select('#tooltip');
 
-  // show/hide the shared tooltip. We reuse the same element across all charts
-  // to avoid z-index fights.
   function showTip(event, html) {
     tooltip.classed('hidden', false).html(html)
       .style('left', (event.pageX + 10) + 'px')
@@ -24,22 +19,18 @@ const PCAChart = (() => {
   }
   function hideTip() { tooltip.classed('hidden', true); }
 
-  // dot radius: base size when no indicator is selected, scaled by indicator
-  // value otherwise. sqrt scale so area (not radius) is proportional to value.
+  // sqrt so area scales with value, not radius
   const BASE_RADIUS = 3;
   const radiusScale = d3.scaleSqrt().range([2.5, 8]);
 
   function render(pcaData, timeseries, countryRegions) {
     const { countries, pca_coords, explained_variance, year: pcaYear } = pcaData;
 
-    // build a lookup from country name → region for coloring dots.
     _regionMap = countryRegions || {};
     colorScale.domain([...new Set(Object.values(_regionMap))]);
 
     d3.select('#pca-year-label').text(`PCA year: ${pcaYear}`);
 
-    // flatten the server data into a flat array of objects — easier to work
-    // with in D3 selections.
     const data = countries.map((c, i) => ({
       country: c,
       x: pca_coords[i][0],
@@ -47,8 +38,7 @@ const PCAChart = (() => {
       color: countryColor(c),
     }));
 
-    // add a small padding around the data extents so dots at the edges aren't
-    // clipped by the axes.
+    // pad extents so edge dots aren't clipped
     const xExt = d3.extent(data, d => d.x);
     const yExt = d3.extent(data, d => d.y);
     const pad = 0.5;
@@ -62,24 +52,19 @@ const PCAChart = (() => {
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // grid lines — drawn before the dots so they sit behind everything.
-    // tickFormat('') suppresses labels on the grid; the real axes below
-    // handle that.
+    // grid behind dots, labels suppressed (real axes handle ticks)
     svg.append('g').attr('class', 'grid')
       .attr('transform', `translate(0,${innerH})`)
       .call(d3.axisBottom(xScale).tickSize(-innerH).tickFormat(''));
     svg.append('g').attr('class', 'grid')
       .call(d3.axisLeft(yScale).tickSize(-innerW).tickFormat(''));
 
-    // axes — kept to 4 ticks each to avoid clutter at this chart size.
     const ev = explained_variance.map(v => (v * 100).toFixed(1));
     svg.append('g').attr('class', 'axis').attr('transform', `translate(0,${innerH})`)
       .call(d3.axisBottom(xScale).ticks(4));
     svg.append('g').attr('class', 'axis')
       .call(d3.axisLeft(yScale).ticks(4));
 
-    // axis labels include the % variance explained so users can judge how much
-    // information each component captures.
     svg.append('text').attr('class', 'axis-label')
       .attr('x', innerW / 2).attr('y', innerH + 44)
       .attr('text-anchor', 'middle')
@@ -90,9 +75,7 @@ const PCAChart = (() => {
       .attr('text-anchor', 'middle')
       .text(`PC2 (${ev[1]}% variance)`);
 
-    // brush layer goes in before the dots so dot click events still fire.
-    // D3 brush captures pointer events on its overlay, which sits on top —
-    // clicks on dots bubble up through the brush before reaching the dot.
+    // brush before dots so brush overlay doesn't swallow dot clicks
     const brushG = svg.append('g').attr('class', 'brush');
 
     const dots = svg.selectAll('.pca-dot')
@@ -105,8 +88,6 @@ const PCAChart = (() => {
       .attr('fill', d => d.color)
       .attr('opacity', .85);
 
-    // country name labels sit just to the right of each dot. they're hidden
-    // or faded when irrelevant via applyDotStyling below.
     const labels = svg.selectAll('.pca-label')
       .data(data, d => d.country)
       .join('text')
@@ -115,9 +96,6 @@ const PCAChart = (() => {
       .attr('y', d => yScale(d.y) + 2)
       .style('pointer-events', 'none');
 
-    // dot interactions: hover shows tooltip and triggers cross-chart highlight,
-    // click toggles the country in the selected set (ctrl+click style via
-    // the state array).
     dots
       .on('mouseover', (event, d) => {
         showTip(event,
@@ -135,8 +113,7 @@ const PCAChart = (() => {
       })
       .on('mouseout', () => { hideTip(); State.hover(null); })
       .on('click', (event, d) => {
-        // toggle this country in/out of the selected array.
-        // holding ctrl isn't required — every click appends or removes.
+        // every click toggles, no modifier needed
         const current = State.getSelected();
         const currentArr = Array.isArray(current) ? current : (current ? [current] : []);
         const already = currentArr.includes(d.country);
@@ -146,9 +123,6 @@ const PCAChart = (() => {
         State.select(next);
       });
 
-    // brush handler — collects all dots whose centre falls inside the selection
-    // rectangle and pushes them into State as the brushed set. Other charts
-    // react to the 'brush' event automatically.
     function handleBrush(event) {
       if (!event.selection) { State.setBrushed([]); return; }
       const [[x0, y0], [x1, y1]] = event.selection;
@@ -166,8 +140,6 @@ const PCAChart = (() => {
         .on('start brush end', handleBrush)
     );
 
-    // visual state: dimmed/brushed/selected/hovered classes are applied here
-    // whenever shared state changes
     function applyDotStyling() {
       const selected = State.getSelected();
       const selectedSet = new Set(Array.isArray(selected) ? selected : (selected ? [selected] : []));
@@ -185,7 +157,6 @@ const PCAChart = (() => {
           return false;
         });
 
-      // labels follow the same logic — fade out anything not in focus.
       labels.attr('opacity', d => {
         if (brushing) return brushedSet.has(d.country) ? 1 : 0.1;
         if (selectedSet.size) return selectedSet.has(d.country) ? 1 : 0.1;
@@ -193,8 +164,6 @@ const PCAChart = (() => {
       });
     }
 
-    // resize dots by the currently selected indicator value at the PCA year.
-    // if no data exists for a country, fall back to a small fixed radius.
     function applyRadius() {
       const indicator = State.getIndicator();
 
@@ -220,7 +189,7 @@ const PCAChart = (() => {
         dots.transition().duration(250).attr('r', BASE_RADIUS);
         return;
       }
-      // guard against all countries having the same value — domain can't be [x, x].
+      // scaleSqrt breaks on a zero-width domain
       radiusScale.domain(ext[0] === ext[1] ? [ext[0] - 1, ext[1] + 1] : ext);
 
       dots.transition().duration(300)
@@ -230,8 +199,7 @@ const PCAChart = (() => {
         });
     }
 
-    // show a "PCA data not available" message if the selected country has no
-    // PCA coordinates (e.g. it was filtered out during preprocessing).
+    // selected countries can be missing from PCA if they had NaNs in the most recent year
     function updatePCAMessage() {
       const selected = State.getSelected();
       const selectedArr = Array.isArray(selected) ? selected : (selected ? [selected] : []);
@@ -246,8 +214,6 @@ const PCAChart = (() => {
         .text('PCA data not available');
     }
 
-    // wire up state events. 'change' covers selection updates; 'hover' and
-    // 'brush' are separate so we don't do unnecessary work on every event.
     State.on('change', applyDotStyling);
     State.on('hover', applyDotStyling);
     State.on('brush', applyDotStyling);
@@ -257,8 +223,6 @@ const PCAChart = (() => {
       updatePCAMessage();
     });
 
-    // region legend — built from the color scale domain so it always stays
-    // in sync with whatever regions are present in the data.
     const legend = d3.select('#pca-legend');
 
     legend.selectAll('.legend-item')
